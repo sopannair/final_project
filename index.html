@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Is Inflation Crippling the American Dream?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>The U.S. Affordability Crisis</h1>
+      <p>Rising inflation and stagnating incomes have made the American Dream unaffordable for many.</p>
+    </header>
+
+    <main>
+    <section id="overview">
+    <h2>1. The Big Picture</h2>
+    <p class="section-text">
+        Explore how key economic metrics have changed over time by using the controls
+        to switch between economic indicators.
+    </p>
+
+    <div id="overview-controls">
+        <label for="indicator-select">Choose a metric:</label>
+        <select id="indicator-select"></select>
+    </div>
+
+    <div id="big-picture-chart"></div>
+    </section>
+
+      <section id="income-vs-inflation">
+        <h2>2. Income vs Inflation</h2>
+        <p class="section-text"></p>
+        <div id="income-inflation-chart"></div>
+      </section>
+
+      <section id="income-vs-consumption">
+        <h2>3. Income vs Consumption</h2>
+        <p class="section-text"></p>
+        <div id="income-consumption-chart"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Data: World Bank, Economy & Growth indicators.</p>
+    </footer>
+
+    <script src="src/main.js" type="module"></script>
+  </body>
+</html>
