@@ -67,3 +67,80 @@ svg {
   line-height: 1.2;
   white-space: nowrap;
 }
+
+.metric-description {
+  margin: 0.75rem 0 1rem 0;
+  max-width: 750px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.comparison-controls {
+  margin: 1rem 0 1.25rem 0;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.comparison-controls select {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+/* Custom range sliders */
+.custom-range-controls {
+  display: none; /* shown only when "custom" is selected */
+  margin: 0.5rem 0 1.25rem 0;
+  padding: 0.75rem 1rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.custom-range-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.custom-range-group label {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.custom-range-group input[type="range"] {
+  width: 100%;
+}
+
+.pct-change-box {
+  padding: 1rem;
+  background: #f7f7f7;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  max-width: 650px;
+}
+
+.pct-change-box small {
+  display: block;
+  margin-top: 0.25rem;
+  font-weight: 400;
+  color: #666;
+}
+
+.pct-chart-container {
+  margin-top: 0.5rem;
+}
+
+/* Green and red text for gain/loss */
+.pct-positive {
+  color: #0e8a00;
+  font-weight: 600;
+}
+
+.pct-negative {
+  color: #c62828;
+  font-weight: 600;
+}
