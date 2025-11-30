@@ -237,6 +237,58 @@ function initIncomeVsCostSection(affordabilitySeries) {
   const g = svg
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
+  
+  // ========= LEGEND =========
+const legend = svg.append("g")
+  .attr("class", "legend")
+  .attr("transform", `translate(${width - margin.right - 200}, ${margin.top - 20})`);
+
+// --- GNI Legend ---
+legend.append("line")
+  .attr("x1", 0)
+  .attr("x2", 20)
+  .attr("y1", 0)
+  .attr("y2", 0)
+  .attr("stroke", "#1f77b4")
+  .attr("stroke-width", 3);
+
+legend.append("text")
+  .attr("x", 28)
+  .attr("y", 4)
+  .style("font-size", "12px")
+  .text("GNI index");
+
+// --- CPI Legend ---
+legend.append("line")
+  .attr("x1", 90)
+  .attr("x2", 110)
+  .attr("y1", 0)
+  .attr("y2", 0)
+  .attr("stroke", "#ff7f0e")
+  .attr("stroke-width", 3);
+
+legend.append("text")
+  .attr("x", 118)
+  .attr("y", 4)
+  .style("font-size", "12px")
+  .text("CPI index");
+
+// --- Event Stem Legend ---
+legend.append("line")
+  .attr("x1", 180)
+  .attr("x2", 180)
+  .attr("y1", -8)
+  .attr("y2", 8)
+  .attr("stroke", "#333")
+  .attr("stroke-width", 2)
+  .attr("stroke-dasharray", "4 4");
+
+legend.append("text")
+  .attr("x", 188)
+  .attr("y", 4)
+  .style("font-size", "12px")
+  .text("Event");
+
 
     // Group to hold world-event markers
 
@@ -244,10 +296,10 @@ function initIncomeVsCostSection(affordabilitySeries) {
 
   // Tooltip for event stems
   const eventTooltip = d3
-    .select("body")
-    .append("div")
-    .attr("class", "chart-tooltip")
-    .style("opacity", 0);
+  .select("body")
+  .append("div")
+  .attr("class", "chart-tooltip")
+  .style("opacity", 0);
 
 
 
@@ -268,13 +320,137 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .range([innerHeight, 0]);
 
   const xAxis = d3.axisBottom(x).tickFormat(d3.format("d"));
-  const yAxis = d3.axisLeft(y);
+  const yAxis = d3.axisLeft(y).ticks(6).tickFormat(d3.format(".0f"));
+
+  // ===== Line hover tooltip for GNI & CPI =====
+const lineTooltip = d3
+  .select("body")
+  .append("div")
+  .attr("class", "chart-tooltip")
+  .style("opacity", 0);
+
+const bisectYear = d3.bisector(d => d.year).left;
+
+// Group that holds the hover circles + vertical line
+const focusGroup = g.append("g").style("display", "none");
+
+// Vertical crosshair line
+const focusLine = focusGroup
+  .append("line")
+  .attr("class", "hover-line")
+  .attr("y1", 0)
+  .attr("y2", innerHeight)
+  .attr("stroke", "#999")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4 4");
+
+// Circle on GNI line (blue)
+const focusCircleGNI = focusGroup
+  .append("circle")
+  .attr("r", 4)
+  .attr("fill", "#1f77b4")
+  .attr("stroke", "#fff")
+  .attr("stroke-width", 1.5);
+
+// Circle on CPI line (orange)
+const focusCircleCPI = focusGroup
+  .append("circle")
+  .attr("r", 4)
+  .attr("fill", "#ff7f0e")
+  .attr("stroke", "#fff")
+  .attr("stroke-width", 1.5);
+
+// Transparent overlay to capture mouse moves
+// Transparent overlay to capture mouse moves (behind lines & stems)
+const hoverLayer = g
+  .insert("rect", ":first-child")  // <-- put it at the bottom of the stacking order
+  .attr("class", "hover-capture")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("width", innerWidth)
+  .attr("height", innerHeight)
+  .attr("fill", "transparent")
+  .style("cursor", "crosshair")
+  .on("mousemove", (event) => {
+    const [mx] = d3.pointer(event, g.node());
+    const year = x.invert(mx);
+
+    const idx = bisectYear(affordabilitySeries, year);
+    const d0 = affordabilitySeries[Math.max(0, idx - 1)];
+    const d1 = affordabilitySeries[Math.min(affordabilitySeries.length - 1, idx)];
+    const d =
+      !d0 || Math.abs(d1.year - year) < Math.abs(d0.year - year) ? d1 : d0;
+
+    const xPos = x(d.year);
+    const yGNI = y(d.gniIndex);
+    const yCPI = y(d.cpiIndex);
+
+    focusGroup.style("display", null);
+
+    focusLine
+      .attr("x1", xPos)
+      .attr("x2", xPos);
+
+    focusCircleGNI
+      .attr("cx", xPos)
+      .attr("cy", yGNI);
+
+    focusCircleCPI
+      .attr("cx", xPos)
+      .attr("cy", yCPI);
+
+    const fmt = d3.format(".1f");
+
+// gap in index points and percentage
+const gapPoints = d.cpiIndex - d.gniIndex;               // CPI – GNI
+const gapPct = (d.cpiIndex / d.gniIndex - 1) * 100;      // relative to GNI
+
+const gapFmt = d3.format("+.1f");
+const gapPctFmt = d3.format("+.1f");
+
+// color class: positive gap = CPI above GNI
+const gapClass = gapPoints >= 0 ? "gap-positive" : "gap-negative";
+
+lineTooltip
+  .style("opacity", 1)
+  .html(
+    `<strong>Year: ${d.year}</strong><br/>
+     GNI index: ${fmt(d.gniIndex)}<br/>
+     CPI index: ${fmt(d.cpiIndex)}<br/>
+     <span class="${gapClass}">
+       CPI ${gapFmt(gapPoints)} pts
+       (${gapPctFmt(gapPct)}%)
+     </span>`
+  )
+  .style("left", event.pageX + 12 + "px")
+  .style("top", event.pageY - 28 + "px");
+
+  })
+  .on("mouseleave", () => {
+    focusGroup.style("display", "none");
+    lineTooltip.style("opacity", 0);
+  });
+
+
+
 
   g.append("g")
     .attr("transform", `translate(0,${innerHeight})`)
     .call(xAxis);
 
   g.append("g").call(yAxis);
+
+  // Y-axis label: what the index numbers mean
+svg.append("text")
+  .attr("class", "y-axis-label")
+  .attr("transform", "rotate(-90)")
+  .attr("x", -height / 2)
+  .attr("y", margin.left - 40)
+  .attr("text-anchor", "middle")
+  .style("font-size", "12px")
+  .style("fill", "#555")
+  .text("Index (1970 = 100)");
+
 
   const lineGNI = d3
     .line()

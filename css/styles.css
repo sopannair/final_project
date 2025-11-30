@@ -200,3 +200,17 @@ svg {
   gap: 8px;
 }
 
+.legend text {
+  font-family: sans-serif;
+  fill: #444;
+}
+
+.gap-positive {
+  color: #de7367;   /* red-ish: CPI above GNI */
+  font-weight: 600;
+}
+
+.gap-negative {
+  color: #2e7d32;   /* green-ish: GNI above CPI */
+  font-weight: 600;
+}
