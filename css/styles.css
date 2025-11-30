@@ -68,6 +68,11 @@ svg {
   white-space: nowrap;
 }
 
+.line-gni-era,
+.line-cpi-era {
+  filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));
+}
+
 .metric-description {
   margin: 0.75rem 0 1rem 0;
   max-width: 750px;
@@ -167,6 +172,11 @@ svg {
 }
 
 
+.era-event-dot {
+  cursor: pointer;
+}
+
+
 #income-vs-cost-card.chart-card {
   background: #ffffff;
   border-radius: 8px;
@@ -189,3 +199,4 @@ svg {
   display: flex;
   gap: 8px;
 }
+

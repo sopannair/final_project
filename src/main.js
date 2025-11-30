@@ -215,15 +215,14 @@ function initIncomeVsCostSection(affordabilitySeries) {
   const container = d3.select("#income-vs-cost-chart");
   console.log("Income vs Cost container found?", !container.empty());
 
-  // If the HTML isn't there or we have no data, bail out.
-  if (container.empty() || !affordabilitySeries.length) return;
+  if (container.empty() || !affordabilitySeries || !affordabilitySeries.length) return;
 
   const eraTitleEl = d3.select("#era-title");
   const eraDescriptionEl = d3.select("#era-description");
   const prevBtn = d3.select("#prev-era-btn");
   const nextBtn = d3.select("#next-era-btn");
 
-  // Basic dimensions
+  // ---- Basic dimensions ----
   const margin = { top: 40, right: 120, bottom: 40, left: 80 };
   const width = 800;
   const height = 360;
@@ -239,7 +238,21 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // Scales
+    // Group to hold world-event markers
+
+  const eventGroup = g.append("g").attr("class", "events-group");
+
+  // Tooltip for event stems
+  const eventTooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "chart-tooltip")
+    .style("opacity", 0);
+
+
+
+  // IMPORTANT: match the property name you actually have in affordabilitySeries
+  // If your log shows "Year", change d.year -> d.Year everywhere below.
   const x = d3
     .scaleLinear()
     .domain(d3.extent(affordabilitySeries, d => d.year))
@@ -273,32 +286,153 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .x(d => x(d.year))
     .y(d => y(d.cpiIndex));
 
+  // ---- Base (full history) lines ----
   g.append("path")
     .datum(affordabilitySeries)
-    .attr("class", "line-gni")
+    .attr("class", "line-gni-base")
     .attr("fill", "none")
     .attr("stroke", "#1f77b4")
-    .attr("stroke-width", 2)
+    .attr("stroke-width", 1.5)
+    .attr("opacity", 0.25)
     .attr("d", lineGNI);
 
   g.append("path")
     .datum(affordabilitySeries)
-    .attr("class", "line-cpi")
+    .attr("class", "line-cpi-base")
     .attr("fill", "none")
     .attr("stroke", "#ff7f0e")
-    .attr("stroke-width", 2)
+    .attr("stroke-width", 1.5)
+    .attr("opacity", 0.25)
     .attr("d", lineCPI);
 
-  // Temporary era text (we’ll hook this to real ERAS later)
-  eraTitleEl.text("1970–1980: Inflation shock and stagflation");
-  eraDescriptionEl.text(
-    "High inflation and slow growth begin to push the cost of living up faster than incomes."
-  );
+  // ---- Highlighted (current era) segments ----
+  const highlightGNI = g.append("path")
+    .attr("class", "line-gni-era")
+    .attr("fill", "none")
+    .attr("stroke", "#1f77b4")
+    .attr("stroke-width", 3);
 
-  // For now, buttons don’t do anything yet; we’ll wire them up when we add eras.
-  prevBtn.on("click", () => {});
-  nextBtn.on("click", () => {});
+  const highlightCPI = g.append("path")
+    .attr("class", "line-cpi-era")
+    .attr("fill", "none")
+    .attr("stroke", "#ff7f0e")
+    .attr("stroke-width", 3);
+
+
+  let currentEraIndex = 0;
+
+  // Small helper to animate a path so it "draws" left → right
+  function animateSegment(pathSelection) {
+    const node = pathSelection.node();
+    if (!node) return;
+
+    const totalLength = node.getTotalLength();
+
+    pathSelection
+      .attr("stroke-dasharray", `${totalLength} ${totalLength}`)
+      .attr("stroke-dashoffset", totalLength)
+      .transition()
+      .duration(1200)
+      .ease(d3.easeCubicOut)
+      .attr("stroke-dashoffset", 0);
+  }
+
+  function setEra(index) {
+    currentEraIndex = (index + ERAS.length) % ERAS.length;
+    const era = ERAS[currentEraIndex];
+
+    eraTitleEl.text(era.label);
+    eraDescriptionEl.text(era.blurb);
+
+    // Filter data for just this era
+    const eraData = affordabilitySeries.filter(
+      d => d.year >= era.startYear && d.year <= era.endYear
+    );
+
+    // Update highlighted paths
+    highlightGNI.datum(eraData).attr("d", lineGNI);
+    highlightCPI.datum(eraData).attr("d", lineCPI);
+
+    // Animate them drawing across the era
+    animateSegment(highlightGNI);
+    animateSegment(highlightCPI);
+
+        // ----- Era-specific events (full-height stem markers) -----
+
+    const events = era.events || [];
+
+    // Clear any old markers
+    eventGroup.selectAll(".event-stem").remove();
+    eventGroup.selectAll(".event-hit").remove();
+
+    if (!events.length) return;
+
+    // Visible stems (thin, dashed)
+    const stems = eventGroup
+      .selectAll(".event-stem")
+      .data(events, d => d.year);
+
+    const stemsEnter = stems
+      .enter()
+      .append("line")
+      .attr("class", "event-stem")
+      .attr("x1", d => x(d.year))
+      .attr("x2", d => x(d.year))
+      .attr("y1", innerHeight) // start collapsed at bottom
+      .attr("y2", innerHeight)
+      .attr("stroke", "#555")
+      .attr("stroke-width", 1.5)
+      .attr("stroke-dasharray", "3,3");
+
+    stemsEnter
+      .merge(stems)
+      .transition()
+      .duration(800)
+      .attr("x1", d => x(d.year))
+      .attr("x2", d => x(d.year))
+      .attr("y1", 0)           // top of plotting area
+      .attr("y2", innerHeight); // bottom (x-axis)
+
+    // Invisible “hit” stems for easier hover (thick, transparent)
+    const hits = eventGroup
+      .selectAll(".event-hit")
+      .data(events, d => d.year);
+
+    hits.exit().remove();
+
+    hits
+      .enter()
+      .append("line")
+      .attr("class", "event-hit")
+      .attr("x1", d => x(d.year))
+      .attr("x2", d => x(d.year))
+      .attr("y1", 0)
+      .attr("y2", innerHeight)
+      .attr("stroke", "transparent")
+      .attr("stroke-width", 14) // big hit area
+      .style("cursor", "pointer")
+      .on("mousemove", (event, d) => {
+        eventTooltip
+          .style("opacity", 1)
+          .html(`<strong>${d.label}</strong><br/>Year: ${d.year}`)
+          .style("left", event.pageX + 12 + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseleave", () => {
+        eventTooltip.style("opacity", 0);
+      });
+
+
+  }
+
+  // Button handlers
+  prevBtn.on("click", () => setEra(currentEraIndex - 1));
+  nextBtn.on("click", () => setEra(currentEraIndex + 1));
+
+  // Initial era
+  setEra(0);
 }
+
 
 
 // ======= PERCENT CHANGE VISUALIZATION (REAL VERSION) ========
@@ -461,60 +595,6 @@ d3.csv(DATA_PATH, d3.autoType).then((rows) => {
   initIncomeVsCostSection(affordabilitySeries);
 
 });
-
-
-
-// =========================
-// 2. Income vs Cost of Living
-// =========================
-
-const AFFORDABILITY_ERAS = [
-  {
-    id: "1970s",
-    label: "1970–1979: Stagflation and oil shocks",
-    start: 1970,
-    end: 1979,
-    description:
-      "The U.S. faced high inflation and slower growth after the oil shocks. " +
-      "Prices rose quickly, while incomes struggled to keep up."
-  },
-  {
-    id: "1980s",
-    label: "1980–1989: Volcker disinflation and Reagan era",
-    start: 1980,
-    end: 1989,
-    description:
-      "Aggressive interest-rate hikes crushed inflation, but at the cost of a deep recession. " +
-      "Inflation cooled, and incomes began to recover later in the decade."
-  },
-  {
-    id: "1990s",
-    label: "1990–1999: Tech boom and rising productivity",
-    start: 1990,
-    end: 1999,
-    description:
-      "A long expansion driven by technology and globalization. " +
-      "Incomes rose steadily while inflation stayed relatively contained."
-  },
-  {
-    id: "2000s",
-    label: "2000–2009: Dot-com bust, housing boom, and Great Recession",
-    start: 2000,
-    end: 2009,
-    description:
-      "The early 2000s saw a mild recession and a housing boom followed by the 2008 financial crisis. " +
-      "Job losses and wealth destruction hit incomes, even as prices continued to drift higher."
-  },
-  {
-    id: "2010s",
-    label: "2010–2020: Slow recovery, low rates, and the COVID shock",
-    start: 2010,
-    end: 2020,
-    description:
-      "A slow recovery from the Great Recession, with low interest rates and rising asset prices. " +
-      "By 2020, the COVID-19 pandemic triggered both economic disruption and a burst of inflation."
-  }
-];
 
 
 
