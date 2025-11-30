@@ -106,438 +106,6 @@ function updateMetricDescription(indicatorName) {
   box.text(text);
 }
 
-function updatePercentMetricDescription(indicatorName) {
-  const box = d3.select("#pct-metric-description");
-  if (box.empty()) return;
-
-  const text =
-    DESCRIPTIONS[indicatorName] ||
-    "This indicator shows how this economic measure has changed over time.";
-  box.text(text);
-
-}
-
-function buildAffordabilitySeries(byIndicator) {
-  const GNI_NAME = "GNI per capita (constant 2010 US$)";
-  const CPI_NAME = "Inflation, consumer prices (annual %)";
-
-  const gniRaw = (byIndicator.get(GNI_NAME) || [])
-    .filter(d => d.Year >= 1970 && d.Value != null)
-    .sort((a, b) => d3.ascending(a.Year, b.Year));
-
-  const cpiRaw = (byIndicator.get(CPI_NAME) || [])
-    .filter(d => d.Year >= 1970 && d.Value != null)
-    .sort((a, b) => d3.ascending(a.Year, b.Year));
-
-  if (!gniRaw.length || !cpiRaw.length) {
-    console.warn("Missing GNI or CPI data for affordability story.");
-    return [];
-  }
-
-function initIncomeVsCostSection(affordabilitySeries) {
-  const container = d3.select("#income-vs-cost-chart");
-  console.log("Income vs Cost container found?", !container.empty());
-  if (container.empty()) return; // safety if the HTML isn't present
-
-  const eraTitleEl = d3.select("#era-title");
-  const eraDescriptionEl = d3.select("#era-description");
-
-  const prevBtn = d3.select("#prev-era-btn");
-  const nextBtn = d3.select("#next-era-btn");
-
-  // Basic dimensions
-  const margin = { top: 40, right: 120, bottom: 40, left: 80 };
-  const width = 800;
-  const height = 360;
-  const innerWidth = width - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
-
-  const svg = container
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-  const g = svg
-    .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-  // Scales
-  const x = d3
-    .scaleLinear()
-    .domain(d3.extent(affordabilitySeries, d => d.year))
-    .range([0, innerWidth]);
-
-  const allValues = [
-    ...affordabilitySeries.map(d => d.gniIndex),
-    ...affordabilitySeries.map(d => d.cpiIndex)
-  ];
-
-  const y = d3
-    .scaleLinear()
-    .domain([d3.min(allValues), d3.max(allValues)])
-    .nice()
-    .range([innerHeight, 0]);
-
-  const xAxis = d3.axisBottom(x).tickFormat(d3.format("d"));
-  const yAxis = d3.axisLeft(y);
-
-  g.append("g")
-    .attr("transform", `translate(0,${innerHeight})`)
-    .call(xAxis);
-
-  g.append("g").call(yAxis);
-
-  // Line generators
-  const gniLine = d3
-    .line()
-    .x(d => x(d.year))
-    .y(d => y(d.gniIndex));
-
-  const cpiLine = d3
-    .line()
-    .x(d => x(d.year))
-    .y(d => y(d.cpiIndex));
-
-  // Base (full-history) lines in muted colors
-  g.append("path")
-    .datum(affordabilitySeries)
-    .attr("class", "gni-base-line")
-    .attr("fill", "none")
-    .attr("stroke", "#1f77b4")
-    .attr("stroke-width", 1.5)
-    .attr("stroke-opacity", 0.35)
-    .attr("d", gniLine);
-
-  g.append("path")
-    .datum(affordabilitySeries)
-    .attr("class", "cpi-base-line")
-    .attr("fill", "none")
-    .attr("stroke", "#d62728")
-    .attr("stroke-width", 1.5)
-    .attr("stroke-opacity", 0.35)
-    .attr("d", cpiLine);
-
-  // Highlighted “current era” segments
-  const eraHighlightGroup = g.append("g").attr("class", "era-highlights");
-
-  const gniEraPath = eraHighlightGroup
-    .append("path")
-    .attr("class", "gni-era-line")
-    .attr("fill", "none")
-    .attr("stroke", "#1f77b4")
-    .attr("stroke-width", 3);
-
-  const cpiEraPath = eraHighlightGroup
-    .append("path")
-    .attr("class", "cpi-era-line")
-    .attr("fill", "none")
-    .attr("stroke", "#d62728")
-    .attr("stroke-width", 3);
-
-  // Optional shaded background for the current era
-  const eraBand = g
-    .append("rect")
-    .attr("class", "era-band")
-    .attr("y", 0)
-    .attr("height", innerHeight)
-    .attr("fill", "#f2f2f2")
-    .attr("opacity", 0.4);
-
-  // Legend
-  const legend = svg.append("g").attr(
-    "transform",
-    `translate(${width - margin.right + 10},${margin.top})`
-  );
-
-  legend
-    .append("line")
-    .attr("x1", 0)
-    .attr("x2", 24)
-    .attr("y1", 5)
-    .attr("y2", 5)
-    .attr("stroke", "#1f77b4")
-    .attr("stroke-width", 3);
-
-  legend
-    .append("text")
-    .attr("x", 28)
-    .attr("y", 8)
-    .attr("font-size", "12px")
-    .text("GNI per capita (index)");
-
-  legend
-    .append("line")
-    .attr("x1", 0)
-    .attr("x2", 24)
-    .attr("y1", 22)
-    .attr("y2", 22)
-    .attr("stroke", "#d62728")
-    .attr("stroke-width", 3);
-
-  legend
-    .append("text")
-    .attr("x", 28)
-    .attr("y", 25)
-    .attr("font-size", "12px")
-    .text("Cost of living (CPI index)");
-
-  // Chart title
-  svg
-    .append("text")
-    .attr("x", width / 2)
-    .attr("y", margin.top - 12)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "16px")
-    .attr("font-weight", "600")
-    .text("Income vs Cost of Living (indexed to 1970 = 100)");
-
-  // Simple tooltip that shows both series on hover
-  const tooltip = d3
-    .select("body")
-    .append("div")
-    .attr("class", "chart-tooltip")
-    .style("opacity", 0);
-
-  const hoverDotGni = g
-    .append("circle")
-    .attr("r", 4)
-    .attr("fill", "#1f77b4")
-    .style("opacity", 0);
-
-  const hoverDotCpi = g
-    .append("circle")
-    .attr("r", 4)
-    .attr("fill", "#d62728")
-    .style("opacity", 0);
-
-  const bisectYear = d3.bisector(d => d.year).left;
-
-  svg
-    .append("rect")
-    .attr("class", "hover-catcher")
-    .attr("fill", "transparent")
-    .attr("x", margin.left)
-    .attr("y", margin.top)
-    .attr("width", innerWidth)
-    .attr("height", innerHeight)
-    .on("mousemove", (event) => {
-      const [mx, my] = d3.pointer(event);
-      const year = x.invert(mx - margin.left);
-      const idx = bisectYear(affordabilitySeries, year);
-      const d = affordabilitySeries[Math.max(0, Math.min(affordabilitySeries.length - 1, idx))];
-
-      hoverDotGni
-        .style("opacity", 1)
-        .attr("cx", margin.left + x(d.year))
-        .attr("cy", margin.top + y(d.gniIndex));
-
-      hoverDotCpi
-        .style("opacity", 1)
-        .attr("cx", margin.left + x(d.year))
-        .attr("cy", margin.top + y(d.cpiIndex));
-
-      tooltip
-        .style("opacity", 1)
-        .html(
-          `<strong>${d.year}</strong><br/>
-           GNI index: ${d3.format(".1f")(d.gniIndex)}<br/>
-           CPI index: ${d3.format(".1f")(d.cpiIndex)}`
-        )
-        .style("left", event.pageX + 12 + "px")
-        .style("top", event.pageY - 28 + "px");
-    })
-    .on("mouseleave", () => {
-      hoverDotGni.style("opacity", 0);
-      hoverDotCpi.style("opacity", 0);
-      tooltip.style("opacity", 0);
-    });
-
-  // --- Era stepping logic ---
-
-  let currentEraIndex = 0;
-
-  function showEra(index) {
-    currentEraIndex = Math.max(0, Math.min(AFFORDABILITY_ERAS.length - 1, index));
-    const era = AFFORDABILITY_ERAS[currentEraIndex];
-
-    // Update text
-    if (!eraTitleEl.empty()) {
-      eraTitleEl.text(era.label);
-    }
-    if (!eraDescriptionEl.empty()) {
-      eraDescriptionEl.text(era.description);
-    }
-
-    // Only highlight up to the end of the current era,
-    // but keep earlier history in the base lines.
-    const eraData = affordabilitySeries.filter(d => d.year <= era.end);
-
-    // Update shaded band between era.start and era.end
-    const bandX = x(era.start);
-    const bandWidth = x(era.end) - x(era.start);
-
-    eraBand
-      .transition()
-      .duration(500)
-      .attr("x", bandX)
-      .attr("width", bandWidth);
-
-    // Animate highlighted GNI & CPI paths
-    gniEraPath
-      .datum(eraData)
-      .transition()
-      .duration(700)
-      .attr("d", gniLine);
-
-    cpiEraPath
-      .datum(eraData)
-      .transition()
-      .duration(700)
-      .attr("d", cpiLine);
-  }
-
-  // Button handlers
-  prevBtn.on("click", () => {
-    showEra(currentEraIndex - 1);
-  });
-
-  nextBtn.on("click", () => {
-    showEra(currentEraIndex + 1);
-  });
-
-  // Initial state: first era
-  showEra(0);
-}
-
-
-d3.csv(DATA_PATH, d3.autoType).then((rows) => {
-  // Ensure types are good
-  const data = rows.filter(d => !isNaN(d.Year) && d.Value != null);
-
-  const byIndicator = d3.group(data, d => d["Indicator Name"]);
-
-  // Global year bounds
-  const years = data.map(d => d.Year);
-  const minYear = d3.min(years);
-  const maxYear = d3.max(years);
-
-  initBigPictureChart(byIndicator);
-
-  // NEW: pass min/max year
-  initPercentChangeSection(byIndicator, minYear, maxYear);
-
-  // --- Affordability series (GNI vs CPI, both indexed to 1970 = 100) ---
-  const affordabilitySeries = buildAffordabilitySeries(byIndicator);
-  console.log("Affordability series (indexed to 1970 = 100):", affordabilitySeries);
-
-  // For debugging in the console
-  window.affordabilitySeries = affordabilitySeries;
-
-  // Initialize the Income vs Cost of Living storytelling chart
-  initIncomeVsCostSection(affordabilitySeries);
-
-});
-
-
-
-// =========================
-// 2. Income vs Cost of Living
-// =========================
-
-const AFFORDABILITY_ERAS = [
-  {
-    id: "1970s",
-    label: "1970–1979: Stagflation and oil shocks",
-    start: 1970,
-    end: 1979,
-    description:
-      "The U.S. faced high inflation and slower growth after the oil shocks. " +
-      "Prices rose quickly, while incomes struggled to keep up."
-  },
-  {
-    id: "1980s",
-    label: "1980–1989: Volcker disinflation and Reagan era",
-    start: 1980,
-    end: 1989,
-    description:
-      "Aggressive interest-rate hikes crushed inflation, but at the cost of a deep recession. " +
-      "Inflation cooled, and incomes began to recover later in the decade."
-  },
-  {
-    id: "1990s",
-    label: "1990–1999: Tech boom and rising productivity",
-    start: 1990,
-    end: 1999,
-    description:
-      "A long expansion driven by technology and globalization. " +
-      "Incomes rose steadily while inflation stayed relatively contained."
-  },
-  {
-    id: "2000s",
-    label: "2000–2009: Dot-com bust, housing boom, and Great Recession",
-    start: 2000,
-    end: 2009,
-    description:
-      "The early 2000s saw a mild recession and a housing boom followed by the 2008 financial crisis. " +
-      "Job losses and wealth destruction hit incomes, even as prices continued to drift higher."
-  },
-  {
-    id: "2010s",
-    label: "2010–2020: Slow recovery, low rates, and the COVID shock",
-    start: 2010,
-    end: 2020,
-    description:
-      "A slow recovery from the Great Recession, with low interest rates and rising asset prices. " +
-      "By 2020, the COVID-19 pandemic triggered both economic disruption and a burst of inflation."
-  }
-];
-
-
-
-  // ---------- GNI index (1970 = 100) ----------
-  const gni1970 = gniRaw.find(d => d.Year === 1970)?.Value;
-  if (gni1970 == null) {
-    console.warn("No GNI value for 1970; cannot index GNI.");
-    return [];
-  }
-
-  const gniIndexByYear = new Map();
-  gniRaw.forEach(d => {
-    const idx = (d.Value / gni1970) * 100;
-    gniIndexByYear.set(d.Year, idx);
-  });
-
-  // ---------- CPI index (1970 = 100) ----------
-  // We treat the first available year (should be 1970) as the base = 100,
-  // then compound forward using the annual % changes.
-  const cpiIndexByYear = new Map();
-  let currentIndex = 100;
-
-  cpiRaw.forEach((d, i) => {
-    if (i === 0) {
-      // Base year (expected to be 1970)
-      currentIndex = 100;
-    } else {
-      currentIndex = currentIndex * (1 + d.Value / 100);
-    }
-    cpiIndexByYear.set(d.Year, currentIndex);
-  });
-
-  // ---------- Merge into a single series ----------
-  const years = Array.from(gniIndexByYear.keys())
-    .filter(y => cpiIndexByYear.has(y))
-    .sort((a, b) => a - b);
-
-  const series = years.map(year => ({
-    Year: year,
-    gniIndex: gniIndexByYear.get(year),
-    cpiIndex: cpiIndexByYear.get(year)
-  }));
-
-  return series;
-}
-
-
 function initBigPictureChart(byIndicator) {
   const indicatorNames = Array.from(byIndicator.keys());
 
@@ -570,130 +138,168 @@ function initBigPictureChart(byIndicator) {
 }
 
 
-function drawBigPictureChart(series, indicatorName) {
-  const container = d3.select("#big-picture-chart");
+function updatePercentMetricDescription(indicatorName) {
+  const box = d3.select("#pct-metric-description");
+  if (box.empty()) return;
 
-  // Clear previous chart
-  container.selectAll("*").remove();
+  const text =
+    DESCRIPTIONS[indicatorName] ||
+    "This indicator shows how this economic measure has changed over time.";
+  box.text(text);
 
+}
+
+// Build [{ year, gniIndex, cpiIndex }] with both series indexed to 1970 = 100
+function buildAffordabilitySeries(byIndicator) {
+  const GNI_NAME = "GNI per capita (constant 2010 US$)";
+  const CPI_NAME = "Inflation, consumer prices (annual %)";
+
+  const gniRaw = (byIndicator.get(GNI_NAME) || [])
+    .filter(d => d.Year >= 1970 && d.Value != null)
+    .sort((a, b) => d3.ascending(a.Year, b.Year));
+
+  const cpiRaw = (byIndicator.get(CPI_NAME) || [])
+    .filter(d => d.Year >= 1970 && d.Value != null)
+    .sort((a, b) => d3.ascending(a.Year, b.Year));
+
+  if (!gniRaw.length || !cpiRaw.length) {
+    console.warn("Missing GNI or CPI data for affordability story.");
+    return [];
+  }
+
+  // ---------- GNI index (1970 = 100) ----------
+  const gni1970 = gniRaw.find(d => d.Year === 1970)?.Value;
+  if (gni1970 == null) {
+    console.warn("No GNI value for 1970; cannot index GNI.");
+    return [];
+  }
+
+  const gniIndexByYear = new Map();
+  gniRaw.forEach(d => {
+    const idx = (d.Value / gni1970) * 100;
+    gniIndexByYear.set(d.Year, idx);
+  });
+
+  // ---------- CPI index (1970 = 100) ----------
+  // Treat the first year as base 100, then compound forward using annual % changes.
+  const cpiIndexByYear = new Map();
+  let currentIndex = 100;
+
+  cpiRaw.forEach((d, i) => {
+    if (i === 0) {
+      currentIndex = 100; // base year
+    } else {
+      currentIndex = currentIndex * (1 + d.Value / 100);
+    }
+    cpiIndexByYear.set(d.Year, currentIndex);
+  });
+
+  // ---------- Merge into a single series ----------
+  const years = Array.from(gniIndexByYear.keys())
+    .filter(y => cpiIndexByYear.has(y))
+    .sort((a, b) => a - b);
+
+  return years.map(year => ({
+    year,
+    gniIndex: gniIndexByYear.get(year),
+    cpiIndex: cpiIndexByYear.get(year)
+  }));
+}
+
+
+// =========================
+// 2. Income vs Cost of Living (overlay chart)
+// =========================
+
+function initIncomeVsCostSection(affordabilitySeries) {
+  const container = d3.select("#income-vs-cost-chart");
+  console.log("Income vs Cost container found?", !container.empty());
+
+  // If the HTML isn't there or we have no data, bail out.
+  if (container.empty() || !affordabilitySeries.length) return;
+
+  const eraTitleEl = d3.select("#era-title");
+  const eraDescriptionEl = d3.select("#era-description");
+  const prevBtn = d3.select("#prev-era-btn");
+  const nextBtn = d3.select("#next-era-btn");
+
+  // Basic dimensions
+  const margin = { top: 40, right: 120, bottom: 40, left: 80 };
   const width = 800;
-  const height = 400;
-
-  // ⬅️ increase left margin for long y-axis labels
-  const margin = { top: 40, right: 30, bottom: 40, left: 110 };
+  const height = 360;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
 
   const svg = container
     .append("svg")
     .attr("width", width)
     .attr("height", height);
 
-  const maxVal = d3.max(series, d => d.Value);
-
-  // Choose a nicer format for big numbers
-  const yTickFormat =
-    maxVal >= 1e9 ? d3.format(".2s") : // e.g. 1.2B, 3.4T
-    maxVal >= 1e6 ? d3.format(".2s") :
-    d3.format(",.0f");
+  const g = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
   // Scales
-  const x = d3.scaleLinear()
-    .domain(d3.extent(series, d => d.Year))
-    .range([margin.left, width - margin.right]);
+  const x = d3
+    .scaleLinear()
+    .domain(d3.extent(affordabilitySeries, d => d.year))
+    .range([0, innerWidth]);
 
-  const y = d3.scaleLinear()
-    .domain([0, maxVal * 1.05])
+  const y = d3
+    .scaleLinear()
+    .domain([
+      d3.min(affordabilitySeries, d => Math.min(d.gniIndex, d.cpiIndex)),
+      d3.max(affordabilitySeries, d => Math.max(d.gniIndex, d.cpiIndex))
+    ])
     .nice()
-    .range([height - margin.bottom, margin.top]);
+    .range([innerHeight, 0]);
 
-  const line = d3.line()
-    .x(d => x(d.Year))
-    .y(d => y(d.Value));
-
-  svg.append("path")
-    .datum(series)
-    .attr("fill", "none")
-    .attr("stroke", "#0077cc")
-    .attr("stroke-width", 2)
-    .attr("d", line);
-
-  // Axes
   const xAxis = d3.axisBottom(x).tickFormat(d3.format("d"));
-  const yAxis = d3.axisLeft(y).tickFormat(yTickFormat);
+  const yAxis = d3.axisLeft(y);
 
-  svg.append("g")
-    .attr("transform", `translate(0,${height - margin.bottom})`)
+  g.append("g")
+    .attr("transform", `translate(0,${innerHeight})`)
     .call(xAxis);
 
-  svg.append("g")
-    .attr("transform", `translate(${margin.left},0)`)
-    .call(yAxis);
+  g.append("g").call(yAxis);
 
-  // Title
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", margin.top - 10)
-    .attr("text-anchor", "middle")
-    .style("font-size", "16px")
-    .style("font-weight", "600")
-    .text(LABELS[indicatorName] ?? indicatorName);
+  const lineGNI = d3
+    .line()
+    .x(d => x(d.year))
+    .y(d => y(d.gniIndex));
 
-  // === Interactive tooltip ===
-  const tooltip = d3
-    .select("body")
-    .append("div")
-    .attr("class", "chart-tooltip")
-    .style("opacity", 0);
+  const lineCPI = d3
+    .line()
+    .x(d => x(d.year))
+    .y(d => y(d.cpiIndex));
 
-  const focusCircle = svg
-    .append("circle")
-    .attr("r", 4)
-    .attr("fill", "#ff6600")
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 1.5)
-    .style("opacity", 0);
+  g.append("path")
+    .datum(affordabilitySeries)
+    .attr("class", "line-gni")
+    .attr("fill", "none")
+    .attr("stroke", "#1f77b4")
+    .attr("stroke-width", 2)
+    .attr("d", lineGNI);
 
-  const bisectYear = d3.bisector((d) => d.Year).left;
+  g.append("path")
+    .datum(affordabilitySeries)
+    .attr("class", "line-cpi")
+    .attr("fill", "none")
+    .attr("stroke", "#ff7f0e")
+    .attr("stroke-width", 2)
+    .attr("d", lineCPI);
 
-  svg
-    .append("rect")
-    .attr("fill", "transparent")
-    .attr("pointer-events", "all")
-    .attr("x", margin.left)
-    .attr("y", margin.top)
-    .attr("width", width - margin.left - margin.right)
-    .attr("height", height - margin.top - margin.bottom)
-    .on("mousemove", (event) => {
-      const [mx] = d3.pointer(event);
-      const year = x.invert(mx);
+  // Temporary era text (we’ll hook this to real ERAS later)
+  eraTitleEl.text("1970–1980: Inflation shock and stagflation");
+  eraDescriptionEl.text(
+    "High inflation and slow growth begin to push the cost of living up faster than incomes."
+  );
 
-      const idx = bisectYear(series, year);
-      const d0 = series[Math.max(0, idx - 1)];
-      const d1 = series[Math.min(series.length - 1, idx)];
-      const d =
-        !d0 || Math.abs(d1.Year - year) < Math.abs(d0.Year - year) ? d1 : d0;
+  // For now, buttons don’t do anything yet; we’ll wire them up when we add eras.
+  prevBtn.on("click", () => {});
+  nextBtn.on("click", () => {});
+}
 
-      focusCircle
-        .style("opacity", 1)
-        .attr("cx", x(d.Year))
-        .attr("cy", y(d.Value));
-
-      tooltip
-        .style("opacity", 1)
-        .html(
-          `<strong>${LABELS[indicatorName] ?? indicatorName}</strong><br/>
-           Year: ${d.Year}<br/>
-           Value: ${d3.format(",.2f")(d.Value)}`
-        )
-        .style("left", event.pageX + 12 + "px")
-        .style("top", event.pageY - 28 + "px");
-    })
-    .on("mouseleave", () => {
-      focusCircle.style("opacity", 0);
-      tooltip.style("opacity", 0);
-    });
-  } 
-
-    // ======= PERCENT CHANGE VISUALIZATION SETUP ========
 
 // ======= PERCENT CHANGE VISUALIZATION (REAL VERSION) ========
 
@@ -826,6 +432,218 @@ endSlider.on("input", () => {
   updateCustomVisibility();
   update();
 }
+
+
+d3.csv(DATA_PATH, d3.autoType).then((rows) => {
+  // Ensure types are good
+  const data = rows.filter(d => !isNaN(d.Year) && d.Value != null);
+
+  const byIndicator = d3.group(data, d => d["Indicator Name"]);
+
+  // Global year bounds
+  const years = data.map(d => d.Year);
+  const minYear = d3.min(years);
+  const maxYear = d3.max(years);
+
+  initBigPictureChart(byIndicator);
+
+  // NEW: pass min/max year
+  initPercentChangeSection(byIndicator, minYear, maxYear);
+
+  // --- Affordability series (GNI vs CPI, both indexed to 1970 = 100) ---
+  const affordabilitySeries = buildAffordabilitySeries(byIndicator);
+  console.log("Affordability series (indexed to 1970 = 100):", affordabilitySeries);
+
+  // For debugging in the console
+  window.affordabilitySeries = affordabilitySeries;
+
+  // Initialize the Income vs Cost of Living storytelling chart
+  initIncomeVsCostSection(affordabilitySeries);
+
+});
+
+
+
+// =========================
+// 2. Income vs Cost of Living
+// =========================
+
+const AFFORDABILITY_ERAS = [
+  {
+    id: "1970s",
+    label: "1970–1979: Stagflation and oil shocks",
+    start: 1970,
+    end: 1979,
+    description:
+      "The U.S. faced high inflation and slower growth after the oil shocks. " +
+      "Prices rose quickly, while incomes struggled to keep up."
+  },
+  {
+    id: "1980s",
+    label: "1980–1989: Volcker disinflation and Reagan era",
+    start: 1980,
+    end: 1989,
+    description:
+      "Aggressive interest-rate hikes crushed inflation, but at the cost of a deep recession. " +
+      "Inflation cooled, and incomes began to recover later in the decade."
+  },
+  {
+    id: "1990s",
+    label: "1990–1999: Tech boom and rising productivity",
+    start: 1990,
+    end: 1999,
+    description:
+      "A long expansion driven by technology and globalization. " +
+      "Incomes rose steadily while inflation stayed relatively contained."
+  },
+  {
+    id: "2000s",
+    label: "2000–2009: Dot-com bust, housing boom, and Great Recession",
+    start: 2000,
+    end: 2009,
+    description:
+      "The early 2000s saw a mild recession and a housing boom followed by the 2008 financial crisis. " +
+      "Job losses and wealth destruction hit incomes, even as prices continued to drift higher."
+  },
+  {
+    id: "2010s",
+    label: "2010–2020: Slow recovery, low rates, and the COVID shock",
+    start: 2010,
+    end: 2020,
+    description:
+      "A slow recovery from the Great Recession, with low interest rates and rising asset prices. " +
+      "By 2020, the COVID-19 pandemic triggered both economic disruption and a burst of inflation."
+  }
+];
+
+
+
+function drawBigPictureChart(series, indicatorName) {
+  const container = d3.select("#big-picture-chart");
+
+  // Clear previous chart
+  container.selectAll("*").remove();
+
+  const width = 800;
+  const height = 400;
+
+  // ⬅increase left margin for long y-axis labels
+  const margin = { top: 40, right: 30, bottom: 40, left: 110 };
+
+  const svg = container
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  const maxVal = d3.max(series, d => d.Value);
+
+  // Choose a nicer format for big numbers
+  const yTickFormat =
+    maxVal >= 1e9 ? d3.format(".2s") : // e.g. 1.2B, 3.4T
+    maxVal >= 1e6 ? d3.format(".2s") :
+    d3.format(",.0f");
+
+  // Scales
+  const x = d3.scaleLinear()
+    .domain(d3.extent(series, d => d.Year))
+    .range([margin.left, width - margin.right]);
+
+  const y = d3.scaleLinear()
+    .domain([0, maxVal * 1.05])
+    .nice()
+    .range([height - margin.bottom, margin.top]);
+
+  const line = d3.line()
+    .x(d => x(d.Year))
+    .y(d => y(d.Value));
+
+  svg.append("path")
+    .datum(series)
+    .attr("fill", "none")
+    .attr("stroke", "#0077cc")
+    .attr("stroke-width", 2)
+    .attr("d", line);
+
+  // Axes
+  const xAxis = d3.axisBottom(x).tickFormat(d3.format("d"));
+  const yAxis = d3.axisLeft(y).tickFormat(yTickFormat);
+
+  svg.append("g")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(xAxis);
+
+  svg.append("g")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(yAxis);
+
+  // Title
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", margin.top - 10)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "600")
+    .text(LABELS[indicatorName] ?? indicatorName);
+
+  // === Interactive tooltip ===
+  const tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "chart-tooltip")
+    .style("opacity", 0);
+
+  const focusCircle = svg
+    .append("circle")
+    .attr("r", 4)
+    .attr("fill", "#ff6600")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.5)
+    .style("opacity", 0);
+
+  const bisectYear = d3.bisector((d) => d.Year).left;
+
+  svg
+    .append("rect")
+    .attr("fill", "transparent")
+    .attr("pointer-events", "all")
+    .attr("x", margin.left)
+    .attr("y", margin.top)
+    .attr("width", width - margin.left - margin.right)
+    .attr("height", height - margin.top - margin.bottom)
+    .on("mousemove", (event) => {
+      const [mx] = d3.pointer(event);
+      const year = x.invert(mx);
+
+      const idx = bisectYear(series, year);
+      const d0 = series[Math.max(0, idx - 1)];
+      const d1 = series[Math.min(series.length - 1, idx)];
+      const d =
+        !d0 || Math.abs(d1.Year - year) < Math.abs(d0.Year - year) ? d1 : d0;
+
+      focusCircle
+        .style("opacity", 1)
+        .attr("cx", x(d.Year))
+        .attr("cy", y(d.Value));
+
+      tooltip
+        .style("opacity", 1)
+        .html(
+          `<strong>${LABELS[indicatorName] ?? indicatorName}</strong><br/>
+           Year: ${d.Year}<br/>
+           Value: ${d3.format(",.2f")(d.Value)}`
+        )
+        .style("left", event.pageX + 12 + "px")
+        .style("top", event.pageY - 28 + "px");
+    })
+    .on("mouseleave", () => {
+      focusCircle.style("opacity", 0);
+      tooltip.style("opacity", 0);
+    });
+  } 
+
+    // ======= PERCENT CHANGE VISUALIZATION SETUP ========
+
+
 
 // Compute and show the % change text
 function updatePercentChangeDisplay(data, metricName, startYear, endYear) {
