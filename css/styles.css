@@ -144,3 +144,48 @@ svg {
   color: #c62828;
   font-weight: 600;
 }
+
+#income-vs-cost-chart svg {
+  max-width: 100%;
+  display: block;
+}
+
+.era-controls {
+  margin-bottom: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+#era-text {
+  margin-bottom: 0.75rem;
+}
+
+#era-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+
+#income-vs-cost-card.chart-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px 20px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-top: 16px;
+}
+
+#income-vs-cost-chart svg {
+  display: block;
+  max-width: 100%;
+}
+
+.era-header {
+  margin-bottom: 12px;
+}
+
+.era-controls {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}

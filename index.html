@@ -60,14 +60,7 @@
       <!-- NEW: dynamic description -->
   <p id="pct-metric-description" class="metric-description"></p>
 
-  <!-- % change result box -->
-  <div id="pct-change-result" class="pct-result-box"></div>
-
-  <!-- chart container -->
-  <div id="pct-change-chart" class="chart-card"></div>
-  </div>
-
-  <!-- Shown only when "custom" is selected -->
+    <!-- Shown only when "custom" is selected -->
   <div id="custom-range-controls" class="custom-range-controls">
     <div class="custom-range-group">
       <label for="custom-start-year">Start year:
@@ -84,6 +77,15 @@
     </div>
   </div>
 
+  <!-- % change result box -->
+  <div id="pct-change-result" class="pct-result-box"></div>
+
+  <!-- chart container -->
+  <div id="pct-change-chart" class="chart-card"></div>
+  </div>
+
+
+
   <!-- % Change Display -->
   <div id="pct-change-result" class="pct-change-box">
     <!-- Filled dynamically -->
@@ -96,11 +98,34 @@
 
 
 
-      <section id="income-vs-inflation">
-        <h2>2. Income vs Inflation</h2>
-        <p class="section-text"></p>
-        <div id="income-inflation-chart"></div>
-      </section>
+<section id="income-vs-cost-section" class="content-section">
+  <h2>2. Income vs Cost of Living</h2>
+  <p>
+    See how incomes and the cost of living have pulled apart from 1970 to 2020.
+    Step through key eras to watch the gap widen.
+  </p>
+
+  <div id="income-vs-cost-card" class="chart-card">
+    <!-- Era title + description -->
+    <div class="era-header">
+      <h3 id="era-title">1970–1980: Inflation shock and stagflation</h3>
+      <p id="era-description">
+        High inflation and slow growth begin to push the cost of living up faster than incomes.
+      </p>
+    </div>
+
+    <!-- This is the container D3 needs -->
+    <div id="income-vs-cost-chart"></div>
+
+    <!-- Era navigation buttons -->
+    <div class="era-controls">
+      <button id="prev-era-btn">◀ Previous era</button>
+      <button id="next-era-btn">Next era ▶</button>
+    </div>
+  </div>
+</section>
+
+
 
       <section id="income-vs-consumption">
         <h2>3. Income vs Consumption</h2>
