@@ -14,7 +14,7 @@
     </header>
 
     <main>
-<section id="overview">
+<!-- <section id="overview">
   <h2>1. The Big Picture</h2>
   <p class="section-text">
     Explore how key economic metrics have changed over time by using the controls
@@ -27,13 +27,40 @@
   </div>
 
   <!-- 🔹 New dynamic description box -->
-  <div id="metric-description" class="metric-description"></div>
+  <!-- <div id="metric-description" class="metric-description"></div> -->
 
-  <div id="big-picture-chart"></div>
+  <!-- <div id="big-picture-chart"></div> -->
+<!-- </section> -->
+
+<section id="income-vs-cost" class="content-section">
+  <h2>1. Income vs Cost of Living</h2>
+  <p>
+    See how incomes and the cost of living have pulled apart from 1970 to 2020.
+    Step through key eras to watch the gap widen between GNI index (Gross National Income per Capita) and CPI (Consumer Price Index).
+  </p>
+
+  <div id="income-vs-cost-card" class="chart-card">
+    <!-- Era title + description -->
+    <div class="era-header">
+      <h3 id="era-title">1970–1980: Inflation shock and stagflation</h3>
+      <p id="era-description">
+        High inflation and slow growth begin to push the cost of living up faster than incomes.
+      </p>
+    </div>
+
+    <!-- This is the container D3 needs -->
+    <div id="income-vs-cost-chart" class="chart-container"></div>
+
+    <!-- Era navigation buttons -->
+    <div class="era-controls">
+      <button id="prev-era-btn">◀ Previous era</button>
+      <button id="next-era-btn">Next era ▶</button>
+    </div>
+  </div>
 </section>
 
 <section id="change-over-time" class="section">
-  <h2>1.1 Percent Change Over Time</h2>
+  <h2>2. Economic Change Over Time</h2>
   <p class="section-text">
     Compare how different economic metrics have grown (or shrunk) over a
     selected time period. This makes it easy to see whether incomes are
@@ -96,42 +123,6 @@
 </section>
 
 
-
-
-<section id="income-vs-cost" class="content-section">
-  <h2>2. Income vs Cost of Living</h2>
-  <p>
-    See how incomes and the cost of living have pulled apart from 1970 to 2020.
-    Step through key eras to watch the gap widen.
-  </p>
-
-  <div id="income-vs-cost-card" class="chart-card">
-    <!-- Era title + description -->
-    <div class="era-header">
-      <h3 id="era-title">1970–1980: Inflation shock and stagflation</h3>
-      <p id="era-description">
-        High inflation and slow growth begin to push the cost of living up faster than incomes.
-      </p>
-    </div>
-
-    <!-- This is the container D3 needs -->
-    <div id="income-vs-cost-chart" class="chart-container"></div>
-
-    <!-- Era navigation buttons -->
-    <div class="era-controls">
-      <button id="prev-era-btn">◀ Previous era</button>
-      <button id="next-era-btn">Next era ▶</button>
-    </div>
-  </div>
-</section>
-
-
-
-      <section id="income-vs-consumption">
-        <h2>3. Income vs Consumption</h2>
-        <p class="section-text"></p>
-        <div id="income-consumption-chart"></div>
-      </section>
     <section id="writeup" class="writeup-section">
         <h2>Prototype Writeup:</h2>
         <div class="writeup-content">

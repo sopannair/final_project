@@ -52,48 +52,68 @@ const ERAS = [
     label: "1970–1981 · Oil Shocks & Stagflation",
     startYear: 1970,
     endYear: 1981,
-    blurb: "Two major oil crises send inflation into double digits while incomes struggle to keep up.",
+    blurb:
+      "The 1970s were defined by two major oil shocks that sent inflation soaring while real wages lagged behind. "
+      + "Energy shortages, rising production costs, and geopolitical instability drove prices sharply upward across the economy. "
+      + "Households faced quickly rising living costs at a time when economic growth slowed, producing one of the most difficult affordability decades in modern U.S. history.",
     events: [
       { year: 1973, label: "1973 Oil Embargo" },
       { year: 1979, label: "Iranian Revolution / 2nd oil shock" }
     ]
   },
+
   {
     id: "disinflation",
     label: "1982–1990 · Volcker Disinflation",
     startYear: 1982,
     endYear: 1990,
-    blurb: "Aggressive interest rate hikes crush inflation but wage growth remains weak.",
+    blurb:
+      "After years of runaway inflation, the Federal Reserve—led by Paul Volcker—implemented aggressive interest-rate hikes that successfully brought prices under control. "
+      + "The strategy triggered a severe recession early in the decade, but inflation finally collapsed from double-digit levels. "
+      + "As stability returned, productivity and consumer confidence gradually improved, yet wage gains remained uneven across demographic and industry lines.",
     events: [{ year: 1982, label: "End of double-digit inflation" }]
   },
+
   {
     id: "tech_boom",
     label: "1991–2000 · Tech Boom",
     startYear: 1991,
     endYear: 2000,
-    blurb: "Productivity and GDP surge, but incomes don’t rise as fast as living costs.",
+    blurb:
+      "The 1990s experienced strong economic growth powered by globalization, declining inflation, and rapid technological innovation. "
+      + "The explosive rise of the internet and computing boosted productivity and helped fuel one of the longest expansions in U.S. history. "
+      + "While incomes rose, asset prices—especially tech stocks—grew even faster, setting the stage for the dot-com bubble at the decade’s end.",
     events: [{ year: 2000, label: "Dot-com peak" }]
   },
+
   {
     id: "housing_and_crisis",
     label: "2001–2010 · Housing Bubble & Great Recession",
     startYear: 2001,
     endYear: 2010,
-    blurb: "Housing and debt boom, then collapse. Incomes fall while cost of living keeps climbing.",
+    blurb:
+      "After the dot-com crash, low interest rates and expanding credit availability fueled a massive housing boom throughout the 2000s. "
+      + "Growing household debt and risky mortgage lending practices eventually pushed the financial system to the brink, culminating in the 2008 global financial crisis. "
+      + "Incomes stagnated or fell while unemployment surged, yet many essentials—including housing, healthcare, and education—continued rising in cost, widening the affordability gap.",
     events: [
       { year: 2001, label: "Dot-com recession" },
       { year: 2008, label: "Global financial crisis" }
     ]
   },
+
   {
     id: "slow_recovery",
     label: "2011–2020 · Slow Recovery to COVID",
     startYear: 2011,
     endYear: 2020,
-    blurb: "A long, weak recovery: incomes rise from a low base while costs continue compounding.",
+    blurb:
+      "The recovery from the Great Recession was long and uneven, with job growth returning slowly and wage gains lagging behind asset price appreciation. "
+      + "Low interest rates helped stimulate investment but also contributed to rising housing costs in many regions, further pressuring household budgets. "
+      + "By 2020, the COVID-19 pandemic created another historic economic shock, disrupting labor markets and causing a sharp but temporary inflation spike.",
     events: [{ year: 2020, label: "COVID-19" }]
   }
 ];
+
 
 // Will hold [{ Year, gniIndex, cpiIndex }] for 1970–2020
 let affordabilitySeries = [];
