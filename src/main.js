@@ -530,9 +530,18 @@ function initIncomeVsCostSection(affordabilitySeries) {
     revealedCPI.datum(revealedData).attr("d", lineCPI);
 
     // 2) Highlight + animate THIS era’s segment
-    const eraData = affordabilitySeries.filter(
-      d => d.year >= era.startYear && d.year <= era.endYear
-    );
+  // First grab the raw years for this era
+  let eraData = affordabilitySeries.filter(
+    d => d.year >= era.startYear && d.year <= era.endYear
+  );
+
+  // PREPEND the previous year's point (if it exists) so there’s no visible gap
+  const joinYear = era.startYear - 1;
+  const joinPoint = affordabilitySeries.find(d => d.year === joinYear);
+  if (joinPoint) {
+    eraData = [joinPoint, ...eraData];
+  }
+
 
     highlightGNI.datum(eraData).attr("d", lineGNI);
     highlightCPI.datum(eraData).attr("d", lineCPI);
