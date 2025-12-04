@@ -257,74 +257,69 @@ function initIncomeVsCostSection(affordabilitySeries) {
   const g = svg
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
-  
+
   // ========= LEGEND =========
-const legend = svg.append("g")
-  .attr("class", "legend")
-  .attr("transform", `translate(${width - margin.right - 200}, ${margin.top - 20})`);
+  const legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("transform", `translate(${width - margin.right - 200}, ${margin.top - 20})`);
 
-// --- GNI Legend ---
-legend.append("line")
-  .attr("x1", 0)
-  .attr("x2", 20)
-  .attr("y1", 0)
-  .attr("y2", 0)
-  .attr("stroke", "#1f77b4")
-  .attr("stroke-width", 3);
+  // --- GNI Legend ---
+  legend.append("line")
+    .attr("x1", 0)
+    .attr("x2", 20)
+    .attr("y1", 0)
+    .attr("y2", 0)
+    .attr("stroke", "#1f77b4")
+    .attr("stroke-width", 3);
 
-legend.append("text")
-  .attr("x", 28)
-  .attr("y", 4)
-  .style("font-size", "12px")
-  .text("GNI index");
+  legend.append("text")
+    .attr("x", 28)
+    .attr("y", 4)
+    .style("font-size", "12px")
+    .text("GNI index");
 
-// --- CPI Legend ---
-legend.append("line")
-  .attr("x1", 90)
-  .attr("x2", 110)
-  .attr("y1", 0)
-  .attr("y2", 0)
-  .attr("stroke", "#ff7f0e")
-  .attr("stroke-width", 3);
+  // --- CPI Legend ---
+  legend.append("line")
+    .attr("x1", 90)
+    .attr("x2", 110)
+    .attr("y1", 0)
+    .attr("y2", 0)
+    .attr("stroke", "#ff7f0e")
+    .attr("stroke-width", 3);
 
-legend.append("text")
-  .attr("x", 118)
-  .attr("y", 4)
-  .style("font-size", "12px")
-  .text("CPI index");
+  legend.append("text")
+    .attr("x", 118)
+    .attr("y", 4)
+    .style("font-size", "12px")
+    .text("CPI index");
 
-// --- Event Stem Legend ---
-legend.append("line")
-  .attr("x1", 180)
-  .attr("x2", 180)
-  .attr("y1", -8)
-  .attr("y2", 8)
-  .attr("stroke", "#333")
-  .attr("stroke-width", 2)
-  .attr("stroke-dasharray", "4 4");
+  // --- Event Stem Legend ---
+  legend.append("line")
+    .attr("x1", 180)
+    .attr("x2", 180)
+    .attr("y1", -8)
+    .attr("y2", 8)
+    .attr("stroke", "#333")
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "4 4");
 
-legend.append("text")
-  .attr("x", 188)
-  .attr("y", 4)
-  .style("font-size", "12px")
-  .text("Event");
+  legend.append("text")
+    .attr("x", 188)
+    .attr("y", 4)
+    .style("font-size", "12px")
+    .text("Event");
 
-
-    // Group to hold world-event markers
-
+  // Group to hold world-event markers
   const eventGroup = g.append("g").attr("class", "events-group");
 
   // Tooltip for event stems
   const eventTooltip = d3
-  .select("body")
-  .append("div")
-  .attr("class", "chart-tooltip")
-  .style("opacity", 0);
+    .select("body")
+    .append("div")
+    .attr("class", "chart-tooltip")
+    .style("opacity", 0);
 
-
-
-  // IMPORTANT: match the property name you actually have in affordabilitySeries
-  // If your log shows "Year", change d.year -> d.Year everywhere below.
+  // Scales
   const x = d3
     .scaleLinear()
     .domain(d3.extent(affordabilitySeries, d => d.year))
@@ -343,116 +338,94 @@ legend.append("text")
   const yAxis = d3.axisLeft(y).ticks(6).tickFormat(d3.format(".0f"));
 
   // ===== Line hover tooltip for GNI & CPI =====
-const lineTooltip = d3
-  .select("body")
-  .append("div")
-  .attr("class", "chart-tooltip")
-  .style("opacity", 0);
+  const lineTooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "chart-tooltip")
+    .style("opacity", 0);
 
-const bisectYear = d3.bisector(d => d.year).left;
+  const bisectYear = d3.bisector(d => d.year).left;
 
-// Group that holds the hover circles + vertical line
-const focusGroup = g.append("g").style("display", "none");
+  const focusGroup = g.append("g").style("display", "none");
 
-// Vertical crosshair line
-const focusLine = focusGroup
-  .append("line")
-  .attr("class", "hover-line")
-  .attr("y1", 0)
-  .attr("y2", innerHeight)
-  .attr("stroke", "#999")
-  .attr("stroke-width", 1)
-  .attr("stroke-dasharray", "4 4");
+  const focusLine = focusGroup
+    .append("line")
+    .attr("class", "hover-line")
+    .attr("y1", 0)
+    .attr("y2", innerHeight)
+    .attr("stroke", "#999")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "4 4");
 
-// Circle on GNI line (blue)
-const focusCircleGNI = focusGroup
-  .append("circle")
-  .attr("r", 4)
-  .attr("fill", "#1f77b4")
-  .attr("stroke", "#fff")
-  .attr("stroke-width", 1.5);
+  const focusCircleGNI = focusGroup
+    .append("circle")
+    .attr("r", 4)
+    .attr("fill", "#1f77b4")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.5);
 
-// Circle on CPI line (orange)
-const focusCircleCPI = focusGroup
-  .append("circle")
-  .attr("r", 4)
-  .attr("fill", "#ff7f0e")
-  .attr("stroke", "#fff")
-  .attr("stroke-width", 1.5);
+  const focusCircleCPI = focusGroup
+    .append("circle")
+    .attr("r", 4)
+    .attr("fill", "#ff7f0e")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1.5);
 
-// Transparent overlay to capture mouse moves
-// Transparent overlay to capture mouse moves (behind lines & stems)
-const hoverLayer = g
-  .insert("rect", ":first-child")  // <-- put it at the bottom of the stacking order
-  .attr("class", "hover-capture")
-  .attr("x", 0)
-  .attr("y", 0)
-  .attr("width", innerWidth)
-  .attr("height", innerHeight)
-  .attr("fill", "transparent")
-  .style("cursor", "crosshair")
-  .on("mousemove", (event) => {
-    const [mx] = d3.pointer(event, g.node());
-    const year = x.invert(mx);
+  // Transparent hover layer
+  g.insert("rect", ":first-child")
+    .attr("class", "hover-capture")
+    .attr("x", 0)
+    .attr("y", 0)
+    .attr("width", innerWidth)
+    .attr("height", innerHeight)
+    .attr("fill", "transparent")
+    .style("cursor", "crosshair")
+    .on("mousemove", (event) => {
+      const [mx] = d3.pointer(event, g.node());
+      const year = x.invert(mx);
 
-    const idx = bisectYear(affordabilitySeries, year);
-    const d0 = affordabilitySeries[Math.max(0, idx - 1)];
-    const d1 = affordabilitySeries[Math.min(affordabilitySeries.length - 1, idx)];
-    const d =
-      !d0 || Math.abs(d1.year - year) < Math.abs(d0.year - year) ? d1 : d0;
+      const idx = bisectYear(affordabilitySeries, year);
+      const d0 = affordabilitySeries[Math.max(0, idx - 1)];
+      const d1 = affordabilitySeries[Math.min(affordabilitySeries.length - 1, idx)];
+      const d =
+        !d0 || Math.abs(d1.year - year) < Math.abs(d0.year - year) ? d1 : d0;
 
-    const xPos = x(d.year);
-    const yGNI = y(d.gniIndex);
-    const yCPI = y(d.cpiIndex);
+      const xPos = x(d.year);
+      const yGNI = y(d.gniIndex);
+      const yCPI = y(d.cpiIndex);
 
-    focusGroup.style("display", null);
+      focusGroup.style("display", null);
 
-    focusLine
-      .attr("x1", xPos)
-      .attr("x2", xPos);
+      focusLine.attr("x1", xPos).attr("x2", xPos);
+      focusCircleGNI.attr("cx", xPos).attr("cy", yGNI);
+      focusCircleCPI.attr("cx", xPos).attr("cy", yCPI);
 
-    focusCircleGNI
-      .attr("cx", xPos)
-      .attr("cy", yGNI);
+      const fmt = d3.format(".1f");
+      const gapPoints = d.cpiIndex - d.gniIndex;
+      const gapPct = (d.cpiIndex / d.gniIndex - 1) * 100;
 
-    focusCircleCPI
-      .attr("cx", xPos)
-      .attr("cy", yCPI);
+      const gapFmt = d3.format("+.1f");
+      const gapPctFmt = d3.format("+.1f");
+      const gapClass = gapPoints >= 0 ? "gap-positive" : "gap-negative";
 
-    const fmt = d3.format(".1f");
-
-// gap in index points and percentage
-const gapPoints = d.cpiIndex - d.gniIndex;               // CPI – GNI
-const gapPct = (d.cpiIndex / d.gniIndex - 1) * 100;      // relative to GNI
-
-const gapFmt = d3.format("+.1f");
-const gapPctFmt = d3.format("+.1f");
-
-// color class: positive gap = CPI above GNI
-const gapClass = gapPoints >= 0 ? "gap-positive" : "gap-negative";
-
-lineTooltip
-  .style("opacity", 1)
-  .html(
-    `<strong>Year: ${d.year}</strong><br/>
-     GNI index: ${fmt(d.gniIndex)}<br/>
-     CPI index: ${fmt(d.cpiIndex)}<br/>
-     <span class="${gapClass}">
-       CPI ${gapFmt(gapPoints)} pts
-       (${gapPctFmt(gapPct)}%)
-     </span>`
-  )
-  .style("left", event.pageX + 12 + "px")
-  .style("top", event.pageY - 28 + "px");
-
-  })
-  .on("mouseleave", () => {
-    focusGroup.style("display", "none");
-    lineTooltip.style("opacity", 0);
-  });
-
-
-
+      lineTooltip
+        .style("opacity", 1)
+        .html(
+          `<strong>Year: ${d.year}</strong><br/>
+           GNI index: ${fmt(d.gniIndex)}<br/>
+           CPI index: ${fmt(d.cpiIndex)}<br/>
+           <span class="${gapClass}">
+             CPI ${gapFmt(gapPoints)} pts
+             (${gapPctFmt(gapPct)}%)
+           </span>`
+        )
+        .style("left", event.pageX + 12 + "px")
+        .style("top", event.pageY - 28 + "px");
+    })
+    .on("mouseleave", () => {
+      focusGroup.style("display", "none");
+      lineTooltip.style("opacity", 0);
+    });
 
   g.append("g")
     .attr("transform", `translate(0,${innerHeight})`)
@@ -460,17 +433,15 @@ lineTooltip
 
   g.append("g").call(yAxis);
 
-  // Y-axis label: what the index numbers mean
-svg.append("text")
-  .attr("class", "y-axis-label")
-  .attr("transform", "rotate(-90)")
-  .attr("x", -height / 2)
-  .attr("y", margin.left - 40)
-  .attr("text-anchor", "middle")
-  .style("font-size", "12px")
-  .style("fill", "#555")
-  .text("Index (1970 = 100)");
-
+  svg.append("text")
+    .attr("class", "y-axis-label")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", margin.left - 40)
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("fill", "#555")
+    .text("Index (1970 = 100)");
 
   const lineGNI = d3
     .line()
@@ -482,24 +453,18 @@ svg.append("text")
     .x(d => x(d.year))
     .y(d => y(d.cpiIndex));
 
-  // ---- Base (full history) lines ----
-  g.append("path")
-    .datum(affordabilitySeries)
-    .attr("class", "line-gni-base")
+  // ---- REVEALED LINES (everything up to current era endYear) ----
+  const revealedGNI = g.append("path")
+    .attr("class", "line-gni-revealed")
     .attr("fill", "none")
     .attr("stroke", "#1f77b4")
-    .attr("stroke-width", 1.5)
-    .attr("opacity", 0.25)
-    .attr("d", lineGNI);
+    .attr("stroke-width", 2);
 
-  g.append("path")
-    .datum(affordabilitySeries)
-    .attr("class", "line-cpi-base")
+  const revealedCPI = g.append("path")
+    .attr("class", "line-cpi-revealed")
     .attr("fill", "none")
     .attr("stroke", "#ff7f0e")
-    .attr("stroke-width", 1.5)
-    .attr("opacity", 0.25)
-    .attr("d", lineCPI);
+    .attr("stroke-width", 2);
 
   // ---- Highlighted (current era) segments ----
   const highlightGNI = g.append("path")
@@ -514,11 +479,11 @@ svg.append("text")
     .attr("stroke", "#ff7f0e")
     .attr("stroke-width", 3);
 
-
   let currentEraIndex = 0;
 
-  // Small helper to animate a path so it "draws" left → right
+  // Animate a path so it "draws" left → right
   function animateSegment(pathSelection) {
+    pathSelection.interrupt();           // important for fast clicking
     const node = pathSelection.node();
     if (!node) return;
 
@@ -528,9 +493,15 @@ svg.append("text")
       .attr("stroke-dasharray", `${totalLength} ${totalLength}`)
       .attr("stroke-dashoffset", totalLength)
       .transition()
-      .duration(1200)
+      .duration(4000)
       .ease(d3.easeCubicOut)
-      .attr("stroke-dashoffset", 0);
+      .attr("stroke-dashoffset", 0)
+      .on("end", () => {
+        // clean up so hovering behaves normally
+        pathSelection
+          .attr("stroke-dasharray", null)
+          .attr("stroke-dashoffset", null);
+      });
   }
 
   function setEra(index) {
@@ -540,94 +511,88 @@ svg.append("text")
     eraTitleEl.text(era.label);
     eraDescriptionEl.text(era.blurb);
 
-    // Filter data for just this era
+    // ---- 1. REVEALED LINES (1970 → era.endYear) ----
+    const revealedData = affordabilitySeries.filter(
+      d => d.year <= era.endYear
+    );
+
+    revealedGNI.datum(revealedData).attr("d", lineGNI);
+    revealedCPI.datum(revealedData).attr("d", lineCPI);
+
+    // ---- 2. HIGHLIGHT ONLY THIS ERA (for animation) ----
     const eraData = affordabilitySeries.filter(
       d => d.year >= era.startYear && d.year <= era.endYear
     );
 
-    // Update highlighted paths
     highlightGNI.datum(eraData).attr("d", lineGNI);
     highlightCPI.datum(eraData).attr("d", lineCPI);
 
-    // Animate them drawing across the era
     animateSegment(highlightGNI);
     animateSegment(highlightCPI);
 
-        // ----- Era-specific events (full-height stem markers) -----
-
+    // ----- Era-specific event stems -----
     const events = era.events || [];
-
-    // Clear any old markers
     eventGroup.selectAll(".event-stem").remove();
     eventGroup.selectAll(".event-hit").remove();
 
-    if (!events.length) return;
+    if (events.length) {
+      // visible stems
+      const stems = eventGroup
+        .selectAll(".event-stem")
+        .data(events, d => d.year)
+        .enter()
+        .append("line")
+        .attr("class", "event-stem")
+        .attr("x1", d => x(d.year))
+        .attr("x2", d => x(d.year))
+        .attr("y1", innerHeight)
+        .attr("y2", innerHeight)
+        .attr("stroke", "#555")
+        .attr("stroke-width", 1.5)
+        .attr("stroke-dasharray", "3,3");
 
-    // Visible stems (thin, dashed)
-    const stems = eventGroup
-      .selectAll(".event-stem")
-      .data(events, d => d.year);
+      stems
+        .transition()
+        .duration(2500)
+        .attr("y1", 0)
+        .attr("y2", innerHeight);
 
-    const stemsEnter = stems
-      .enter()
-      .append("line")
-      .attr("class", "event-stem")
-      .attr("x1", d => x(d.year))
-      .attr("x2", d => x(d.year))
-      .attr("y1", innerHeight) // start collapsed at bottom
-      .attr("y2", innerHeight)
-      .attr("stroke", "#555")
-      .attr("stroke-width", 1.5)
-      .attr("stroke-dasharray", "3,3");
-
-    stemsEnter
-      .merge(stems)
-      .transition()
-      .duration(800)
-      .attr("x1", d => x(d.year))
-      .attr("x2", d => x(d.year))
-      .attr("y1", 0)           // top of plotting area
-      .attr("y2", innerHeight); // bottom (x-axis)
-
-    // Invisible “hit” stems for easier hover (thick, transparent)
-    const hits = eventGroup
-      .selectAll(".event-hit")
-      .data(events, d => d.year);
-
-    hits.exit().remove();
-
-    hits
-      .enter()
-      .append("line")
-      .attr("class", "event-hit")
-      .attr("x1", d => x(d.year))
-      .attr("x2", d => x(d.year))
-      .attr("y1", 0)
-      .attr("y2", innerHeight)
-      .attr("stroke", "transparent")
-      .attr("stroke-width", 14) // big hit area
-      .style("cursor", "pointer")
-      .on("mousemove", (event, d) => {
-        eventTooltip
-          .style("opacity", 1)
-          .html(`<strong>${d.label}</strong><br/>Year: ${d.year}`)
-          .style("left", event.pageX + 12 + "px")
-          .style("top", event.pageY - 28 + "px");
-      })
-      .on("mouseleave", () => {
-        eventTooltip.style("opacity", 0);
-      });
-
-
+      // invisible hit area for easy hover
+      eventGroup
+        .selectAll(".event-hit")
+        .data(events, d => d.year)
+        .enter()
+        .append("line")
+        .attr("class", "event-hit")
+        .attr("x1", d => x(d.year))
+        .attr("x2", d => x(d.year))
+        .attr("y1", 0)
+        .attr("y2", innerHeight)
+        .attr("stroke", "transparent")
+        .attr("stroke-width", 14)
+        .style("cursor", "pointer")
+        .on("mousemove", (event, d) => {
+          eventTooltip
+            .style("opacity", 1)
+            .html(`<strong>${d.label}</strong><br/>Year: ${d.year}`)
+            .style("left", event.pageX + 12 + "px")
+            .style("top", event.pageY - 28 + "px");
+        })
+        .on("mouseleave", () => {
+          eventTooltip.style("opacity", 0);
+        });
+    }
   }
 
-  // Button handlers
+  // Buttons
   prevBtn.on("click", () => setEra(currentEraIndex - 1));
   nextBtn.on("click", () => setEra(currentEraIndex + 1));
 
   // Initial era
   setEra(0);
 }
+
+
 
 
 
@@ -1155,7 +1120,6 @@ function drawPercentChangeChart(data, metricName, startYear, endYear) {
       tooltip.style("opacity", 0);
     });
 }
-
 
 
 
