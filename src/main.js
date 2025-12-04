@@ -371,7 +371,6 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .attr("stroke", "#fff")
     .attr("stroke-width", 1.5);
 
-  // Transparent hover layer
   g.insert("rect", ":first-child")
     .attr("class", "hover-capture")
     .attr("x", 0)
@@ -453,7 +452,7 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .x(d => x(d.year))
     .y(d => y(d.cpiIndex));
 
-  // ---- REVEALED LINES (everything up to current era endYear) ----
+  // ---- REVEALED LINES (everything up to revealedMaxYear) ----
   const revealedGNI = g.append("path")
     .attr("class", "line-gni-revealed")
     .attr("fill", "none")
@@ -481,8 +480,11 @@ function initIncomeVsCostSection(affordabilitySeries) {
 
   let currentEraIndex = 0;
 
+  // 👇 NEW: how far the story has been permanently revealed
+  let revealedMaxYear = d3.min(affordabilitySeries, d => d.year);
+
   // Animate a path so it "draws" left → right
-  function animateSegment(pathSelection) {
+  function animateSegment(pathSelection, onEnd) {
     pathSelection.interrupt();           // important for fast clicking
     const node = pathSelection.node();
     if (!node) return;
@@ -497,29 +499,37 @@ function initIncomeVsCostSection(affordabilitySeries) {
       .ease(d3.easeCubicOut)
       .attr("stroke-dashoffset", 0)
       .on("end", () => {
-        // clean up so hovering behaves normally
         pathSelection
           .attr("stroke-dasharray", null)
           .attr("stroke-dashoffset", null);
+        if (onEnd) onEnd();
       });
   }
 
   function setEra(index) {
-    currentEraIndex = (index + ERAS.length) % ERAS.length;
-    const era = ERAS[currentEraIndex];
+    const targetIndex = (index + ERAS.length) % ERAS.length;
+    const prevEra = ERAS[currentEraIndex];
+    const nextEra = ERAS[targetIndex];
+
+    // If moving forward, make sure the previous era is fully revealed
+    if (targetIndex > currentEraIndex && prevEra && prevEra.endYear > revealedMaxYear) {
+      revealedMaxYear = prevEra.endYear;
+    }
+
+    currentEraIndex = targetIndex;
+    const era = nextEra;
 
     eraTitleEl.text(era.label);
     eraDescriptionEl.text(era.blurb);
 
-    // ---- 1. REVEALED LINES (1970 → era.endYear) ----
+    // 1) Base/revealed lines: ONLY up to revealedMaxYear (no spoilers)
     const revealedData = affordabilitySeries.filter(
-      d => d.year <= era.endYear
+      d => d.year <= revealedMaxYear
     );
-
     revealedGNI.datum(revealedData).attr("d", lineGNI);
     revealedCPI.datum(revealedData).attr("d", lineCPI);
 
-    // ---- 2. HIGHLIGHT ONLY THIS ERA (for animation) ----
+    // 2) Highlight + animate THIS era’s segment
     const eraData = affordabilitySeries.filter(
       d => d.year >= era.startYear && d.year <= era.endYear
     );
@@ -527,7 +537,17 @@ function initIncomeVsCostSection(affordabilitySeries) {
     highlightGNI.datum(eraData).attr("d", lineGNI);
     highlightCPI.datum(eraData).attr("d", lineCPI);
 
-    animateSegment(highlightGNI);
+    // When animation finishes, permanently reveal through era.endYear
+    const revealCallback = () => {
+      if (era.endYear > revealedMaxYear) {
+        revealedMaxYear = era.endYear;
+        const newRevealed = affordabilitySeries.filter(d => d.year <= revealedMaxYear);
+        revealedGNI.datum(newRevealed).attr("d", lineGNI);
+        revealedCPI.datum(newRevealed).attr("d", lineCPI);
+      }
+    };
+
+    animateSegment(highlightGNI, revealCallback);
     animateSegment(highlightCPI);
 
     // ----- Era-specific event stems -----
@@ -536,7 +556,6 @@ function initIncomeVsCostSection(affordabilitySeries) {
     eventGroup.selectAll(".event-hit").remove();
 
     if (events.length) {
-      // visible stems
       const stems = eventGroup
         .selectAll(".event-stem")
         .data(events, d => d.year)
@@ -557,7 +576,6 @@ function initIncomeVsCostSection(affordabilitySeries) {
         .attr("y1", 0)
         .attr("y2", innerHeight);
 
-      // invisible hit area for easy hover
       eventGroup
         .selectAll(".event-hit")
         .data(events, d => d.year)
@@ -584,13 +602,13 @@ function initIncomeVsCostSection(affordabilitySeries) {
     }
   }
 
-  // Buttons
   prevBtn.on("click", () => setEra(currentEraIndex - 1));
   nextBtn.on("click", () => setEra(currentEraIndex + 1));
 
   // Initial era
   setEra(0);
 }
+
 
 
 
