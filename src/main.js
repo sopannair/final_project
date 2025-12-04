@@ -495,7 +495,7 @@ function initIncomeVsCostSection(affordabilitySeries) {
       .attr("stroke-dasharray", `${totalLength} ${totalLength}`)
       .attr("stroke-dashoffset", totalLength)
       .transition()
-      .duration(4000)
+      .duration(3200)
       .ease(d3.easeCubicOut)
       .attr("stroke-dashoffset", 0)
       .on("end", () => {
@@ -581,7 +581,7 @@ function initIncomeVsCostSection(affordabilitySeries) {
 
       stems
         .transition()
-        .duration(2500)
+        .duration(2800)
         .attr("y1", 0)
         .attr("y2", innerHeight);
 
