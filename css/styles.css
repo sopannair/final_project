@@ -1,17 +1,20 @@
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Merriweather", serif;
   margin: 0;
   padding: 0;
-  background: #fafafa;
-  color: #222;
+  background: #ffffff;
+  color: #232467;
 }
+
+
 
 header {
   padding: 2rem 1.5rem;
   text-align: center;
-  background: #111;
+  background: #773333;
   color: #f5f5f5;
 }
+
 
 main {
   max-width: 960px;
@@ -34,7 +37,7 @@ section {
 }
 
 svg {
-  background: white;
+  background: rgb(255, 255, 255);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
@@ -201,7 +204,7 @@ svg {
 }
 
 .legend text {
-  font-family: sans-serif;
+  font-family: "IBM Plex Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   fill: #444;
 }
 
@@ -213,4 +216,21 @@ svg {
 .gap-negative {
   color: #2e7d32;   /* green-ish: GNI above CPI */
   font-weight: 600;
+}
+
+body,
+p,
+div,
+span,
+li,
+td {
+  font-weight: 400; /* normal weight everywhere */
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: 700; /* only headlines bold */
+}
+
+strong {
+  font-weight: 700;
 }

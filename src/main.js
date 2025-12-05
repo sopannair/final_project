@@ -348,48 +348,73 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .attr("height", innerHeight)
     .attr("fill", "transparent")
     .style("cursor", "crosshair")
-    .on("mousemove", (event) => {
-      const [mx] = d3.pointer(event, g.node());
-      const year = x.invert(mx);
+      .on("mousemove", (event) => {
+    const [mx] = d3.pointer(event, g.node());
+    const year = x.invert(mx);
 
-      const idx = bisectYear(affordabilitySeries, year);
-      const d0 = affordabilitySeries[Math.max(0, idx - 1)];
-      const d1 = affordabilitySeries[Math.min(affordabilitySeries.length - 1, idx)];
-      const d =
-        !d0 || Math.abs(d1.year - year) < Math.abs(d0.year - year) ? d1 : d0;
+    // 🔒 1) If we’re hovering beyond what’s been revealed, hide tooltip & bail
+    if (year > revealedMaxYear) {
+      focusGroup.style("display", "none");
+      lineTooltip.style("opacity", 0);
+      return;
+    }
 
-      const xPos = x(d.year);
-      const yGNI = y(d.gniIndex);
-      const yCPI = y(d.cpiIndex);
+    // 🔒 2) Work only with data that’s actually revealed so far
+    const visible = affordabilitySeries.filter(d => d.year <= revealedMaxYear);
+    if (!visible.length) {
+      focusGroup.style("display", "none");
+      lineTooltip.style("opacity", 0);
+      return;
+    }
 
-      focusGroup.style("display", null);
+    const idx = bisectYear(visible, year);
+    const d0 = visible[Math.max(0, idx - 1)];
+    const d1 = visible[Math.min(visible.length - 1, idx)];
+    const d =
+      !d0 || Math.abs(d1.year - year) < Math.abs(d0.year - year) ? d1 : d0;
 
-      focusLine.attr("x1", xPos).attr("x2", xPos);
-      focusCircleGNI.attr("cx", xPos).attr("cy", yGNI);
-      focusCircleCPI.attr("cx", xPos).attr("cy", yCPI);
+    const xPos = x(d.year);
+    const yGNI = y(d.gniIndex);
+    const yCPI = y(d.cpiIndex);
 
-      const fmt = d3.format(".1f");
-      const gapPoints = d.cpiIndex - d.gniIndex;
-      const gapPct = (d.cpiIndex / d.gniIndex - 1) * 100;
+    focusGroup.style("display", null);
 
-      const gapFmt = d3.format("+.1f");
-      const gapPctFmt = d3.format("+.1f");
-      const gapClass = gapPoints >= 0 ? "gap-positive" : "gap-negative";
+    focusLine
+      .attr("x1", xPos)
+      .attr("x2", xPos);
 
-      lineTooltip
-        .style("opacity", 1)
-        .html(
-          `<strong>Year: ${d.year}</strong><br/>
-           GNI index: ${fmt(d.gniIndex)}<br/>
-           CPI index: ${fmt(d.cpiIndex)}<br/>
-           <span class="${gapClass}">
-             CPI ${gapFmt(gapPoints)} pts
-             (${gapPctFmt(gapPct)}%)
-           </span>`
-        )
-        .style("left", event.pageX + 12 + "px")
-        .style("top", event.pageY - 28 + "px");
-    })
+    focusCircleGNI
+      .attr("cx", xPos)
+      .attr("cy", yGNI);
+
+    focusCircleCPI
+      .attr("cx", xPos)
+      .attr("cy", yCPI);
+
+    const fmt = d3.format(".1f");
+
+    const gapPoints = d.cpiIndex - d.gniIndex;
+    const gapPct = (d.cpiIndex / d.gniIndex - 1) * 100;
+
+    const gapFmt = d3.format("+.1f");
+    const gapPctFmt = d3.format("+.1f");
+    const gapClass = gapPoints >= 0 ? "gap-positive" : "gap-negative";
+
+    lineTooltip
+      .style("opacity", 1)
+      .html(
+        `<strong>Year: ${d.year}</strong><br/>
+         GNI index: ${fmt(d.gniIndex)}<br/>
+         CPI index: ${fmt(d.cpiIndex)}<br/>
+         <span class="${gapClass}">
+           CPI ${gapFmt(gapPoints)} pts
+           (${gapPctFmt(gapPct)}%)
+         </span>`
+      )
+      .style("left", event.pageX + 12 + "px")
+      .style("top", event.pageY - 28 + "px");
+  })
+
     .on("mouseleave", () => {
       focusGroup.style("display", "none");
       lineTooltip.style("opacity", 0);
@@ -449,7 +474,7 @@ function initIncomeVsCostSection(affordabilitySeries) {
 
   let currentEraIndex = 0;
 
-  // 👇 NEW: how far the story has been permanently revealed
+  //  NEW: how far the story has been permanently revealed
   let revealedMaxYear = d3.min(affordabilitySeries, d => d.year);
 
   // Animate a path so it "draws" left → right
@@ -480,6 +505,7 @@ function initIncomeVsCostSection(affordabilitySeries) {
     const prevEra = ERAS[currentEraIndex];
     const nextEra = ERAS[targetIndex];
 
+
     // If moving forward, make sure the previous era is fully revealed
     if (targetIndex > currentEraIndex && prevEra && prevEra.endYear > revealedMaxYear) {
       revealedMaxYear = prevEra.endYear;
@@ -487,6 +513,11 @@ function initIncomeVsCostSection(affordabilitySeries) {
 
     currentEraIndex = targetIndex;
     const era = nextEra;
+
+    // enable/disable nav buttons based on currentEraIndex
+    prevBtn.attr("disabled", currentEraIndex === 0 ? true : null);
+    nextBtn.attr("disabled", currentEraIndex === ERAS.length - 1 ? true : null);
+
 
     eraTitleEl.text(era.label);
     eraDescriptionEl.text(era.blurb);
