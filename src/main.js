@@ -126,37 +126,6 @@ function updateMetricDescription(indicatorName) {
   box.text(text);
 }
 
-function initBigPictureChart(byIndicator) {
-  const indicatorNames = Array.from(byIndicator.keys());
-
-  // Populate dropdown
-  const select = d3.select("#indicator-select");
-  select
-    .selectAll("option")
-    .data(indicatorNames)
-    .enter()
-    .append("option")
-    .attr("value", (d) => d)
-    .text((d) => LABELS[d] ?? d);
-
-  const initialIndicator = indicatorNames[0];
-
-  // NEW: set initial description
-  updateMetricDescription(initialIndicator);
-
-  // Draw initial chart
-  drawBigPictureChart(byIndicator.get(initialIndicator), initialIndicator);
-
-  // When the selection changes, update chart + description
-  select.on("change", (event) => {
-    const selectedName = event.target.value;
-    const series = byIndicator.get(selectedName);
-
-    updateMetricDescription(selectedName); 
-    drawBigPictureChart(series, selectedName);
-  });
-}
-
 
 function updatePercentMetricDescription(indicatorName) {
   const box = d3.select("#pct-metric-description");
@@ -767,7 +736,6 @@ d3.csv(DATA_PATH, d3.autoType).then((rows) => {
   const minYear = d3.min(years);
   const maxYear = d3.max(years);
 
-  initBigPictureChart(byIndicator);
 
   // NEW: pass min/max year
   initPercentChangeSection(byIndicator, minYear, maxYear);
