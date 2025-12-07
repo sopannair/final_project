@@ -300,6 +300,11 @@ strong {
   dominant-baseline: middle;
 }
 
+.metric-hover-dot {
+  pointer-events: none; 
+}
+
+
 #takeaway p {
   margin: 0;
   font-size: 1.25rem;

@@ -244,28 +244,28 @@ function initIncomeVsCostSection(affordabilitySeries) {
   legend.append("text")
     .attr("x", 28)
     .attr("y", 4)
-    .style("font-size", "12px")
+    .style("font-size", "14px")
     .text("GNI index");
 
   // --- CPI Legend ---
   legend.append("line")
-    .attr("x1", 90)
-    .attr("x2", 110)
+    .attr("x1", 95)
+    .attr("x2", 115)
     .attr("y1", 0)
     .attr("y2", 0)
     .attr("stroke", "#ff7f0e")
     .attr("stroke-width", 3);
 
   legend.append("text")
-    .attr("x", 118)
+    .attr("x", 120)
     .attr("y", 4)
-    .style("font-size", "12px")
+    .style("font-size", "14px")
     .text("CPI index");
 
   // --- Event Stem Legend ---
   legend.append("line")
-    .attr("x1", 180)
-    .attr("x2", 180)
+    .attr("x1", 190)
+    .attr("x2", 190)
     .attr("y1", -8)
     .attr("y2", 8)
     .attr("stroke", "#333")
@@ -273,9 +273,9 @@ function initIncomeVsCostSection(affordabilitySeries) {
     .attr("stroke-dasharray", "4 4");
 
   legend.append("text")
-    .attr("x", 188)
+    .attr("x", 195)
     .attr("y", 4)
-    .style("font-size", "12px")
+    .style("font-size", "14px")
     .text("Event");
 
   // Group to hold world-event markers
@@ -352,14 +352,14 @@ function initIncomeVsCostSection(affordabilitySeries) {
     const [mx] = d3.pointer(event, g.node());
     const year = x.invert(mx);
 
-    // 🔒 1) If we’re hovering beyond what’s been revealed, hide tooltip & bail
+    //  1) If we’re hovering beyond what’s been revealed, hide tooltip & bail
     if (year > revealedMaxYear) {
       focusGroup.style("display", "none");
       lineTooltip.style("opacity", 0);
       return;
     }
 
-    // 🔒 2) Work only with data that’s actually revealed so far
+    //  2) Work only with data that’s actually revealed so far
     const visible = affordabilitySeries.filter(d => d.year <= revealedMaxYear);
     if (!visible.length) {
       focusGroup.style("display", "none");
@@ -683,6 +683,14 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
     .attr("class", "chart-tooltip metric-tooltip")
     .style("opacity", 0);
 
+  // Tooltip for hovering over each area band
+  const bandTooltip = d3
+  .select("body")
+  .append("div")
+  .attr("class", "chart-tooltip band-tooltip")
+  .style("opacity", 0);
+
+
 
   // const COLORS = d3.schemeTableau10;
 
@@ -784,6 +792,17 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
       .attr("class", "metric-line")
       .attr("stroke", m.color);
 
+    // Small circle that will show the exact hover position
+    m.hoverDot = row
+      .append("circle")
+      .attr("class", "metric-hover-dot")
+      .attr("r", 3.5)
+      .attr("fill", m.color)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .style("display", "none");
+
+
     // (3) Metric label on the right, inside the expanded margin
     m.labelText = row
       .append("text")
@@ -817,7 +836,60 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
       .attr("x", innerWidth + 4)
       .attr("y", baselineY + 17)
       .style("font-size", "13px");
+
+    // Transparent hover layer over this metric's band
+    m.hoverRect = row
+      .append("rect")
+      .attr("class", "metric-hover-rect")
+      .attr("x", 0)
+      .attr("y", 0)
+      .attr("width", innerWidth)
+      .attr("height", rowHeight)
+      .attr("fill", "transparent")
+      .on("mousemove", (event) => {
+        const series = m.currentSeries;
+        const yScale = m.yScale;
+        if (!series || !series.length || !yScale) return;
+
+        const [mx] = d3.pointer(event, row.node());
+        const year = x.invert(mx);
+
+        const bisect = d3.bisector(d => d.year).left;
+        const idx = bisect(series, year);
+        const d0 = series[Math.max(0, idx - 1)];
+        const d1 = series[Math.min(series.length - 1, idx)];
+        const d =
+          !d0 || Math.abs(d1.year - year) < Math.abs(d0.year - year) ? d1 : d0;
+
+        const xPos = x(d.year);
+        const yPos = yScale(d.value);
+
+        // Position and show the hover dot
+        m.hoverDot
+          .style("display", null)
+          .attr("cx", xPos)
+          .attr("cy", yPos);
+
+        bandTooltip
+          .style("opacity", 1)
+          .html(
+            `<strong>${m.label}</strong><br/>
+            Year: ${d.year}<br/>
+            Value: ${formatShortNumber(d.value)}`
+          )
+          .style("left", event.pageX + 12 + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseleave", () => {
+        bandTooltip.style("opacity", 0);
+        m.hoverDot.style("display", "none");
+      });
+
   });
+
+
+
+
 
   // --- Helper: compute series and percent change for a metric ---
   function buildSeries(metricName, startYear, endYear) {
@@ -882,6 +954,9 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
         endYear
       );
 
+      // Store for hover interactions
+      m.currentSeries = series;
+
       const baselineY = rowHeight - 20;
 
       if (!series.length) {
@@ -891,12 +966,17 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
         return;
       }
 
+      
+
       const valuesExtent = d3.extent(series, d => d.value);
       const y = d3
         .scaleLinear()
         .domain(valuesExtent)
         .nice()
         .range([baselineY, 0]);
+
+      // Save y-scale for this metric for hover tooltip
+      m.yScale = y;
 
       const area = d3
         .area()
