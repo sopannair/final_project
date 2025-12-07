@@ -623,137 +623,349 @@ function initIncomeVsCostSection(affordabilitySeries) {
 
 
 
-// ======= PERCENT CHANGE VISUALIZATION (REAL VERSION) ========
+function initAreaComparisonSection(byIndicator, minYear, maxYear) {
+  const container = d3.select("#area-chart-container");
+  if (container.empty()) return;
 
-function initPercentChangeSection(byIndicator, minYear, maxYear) {
-  const metricSelect = d3.select("#pct-metric-select");
-  const timeframeSelect = d3.select("#pct-timeframe-select");
+  // 1) Clamp this section to 1970+, since most metrics start there
+  const sectionMinYear = Math.max(minYear, 1970);
+  const sectionMaxYear = maxYear;
 
-  const customControls = d3.select("#custom-range-controls");
-  const startSlider = d3.select("#custom-start-year");
-  const endSlider = d3.select("#custom-end-year");
-  const startLabel = d3.select("#custom-start-year-label");
-  const endLabel = d3.select("#custom-end-year-label");
+  // ---- Metrics to show as bands ----
+  const METRICS = [
+    "GDP per capita (constant 2010 US$)",
+    "GNI per capita (constant 2010 US$)",
+    "Adjusted net national income per capita (constant 2010 US$)",
+    "Households and NPISHs Final consumption expenditure per capita (constant 2010 US$)",
+    "Gross national expenditure (constant 2010 US$)",
+    "Final consumption expenditure (constant 2010 US$)"
+  ];
 
-  const indicators = Array.from(byIndicator.keys());
+  const bandMetrics = [
+  {
+    // data key used in byIndicator / grouped data:
+    indicatorName: "GDP per capita (constant 2010 US$)",
+    label: "GDP per capita (2010 $)",   // short label shown on the right
+    color: "#8fb3d9"
+  },
+  {
+    indicatorName: "GNI per capita (constant 2010 US$)",
+    label: "GNI per capita (2010 $)",
+    color: "#f5a25f"
+  },
+  {
+    indicatorName: "Adjusted net national income per capita (constant 2010 US$)",
+    label: "Adj. net national income per capita (2010 $)",
+    color: "#ee7075"
+  },
+  {
+    indicatorName: "Households and NPISHs Final consumption expenditure per capita (constant 2010 US$)",
+    label: "Household consumption per capita (2010 $)",
+    color: "#8bc3b6"
+  },
+  {
+    indicatorName: "Gross national expenditure (constant 2010 US$)",
+    label: "Gross national expenditure (2010 $)",
+    color: "#79b06a"
+  },
+  {
+    indicatorName: "Final consumption expenditure (constant 2010 US$)",
+    label: "Final consumption (2010 $)",
+    color: "#f4c766"
+  }
+];
 
-  // Populate metric dropdown
-  metricSelect
-    .selectAll("option")
-    .data(indicators)
-    .enter()
-    .append("option")
-    .attr("value", d => d)
-    .text(d => LABELS[d] ?? d);
 
-  // Configure sliders for custom range
+  // Tooltip for metric labels on the right
+  const metricTooltip = d3
+    .select("body")
+    .append("div")
+    .attr("class", "chart-tooltip metric-tooltip")
+    .style("opacity", 0);
+
+
+  // const COLORS = d3.schemeTableau10;
+
+  // const metricsConfig = METRICS.map((name, i) => ({
+  //   name,
+  //   label: LABELS[name] ?? name,
+  //   color: COLORS[i % COLORS.length]
+  // }));
+
+    // Use bandMetrics as the single source of truth for name/label/color
+  const metricsConfig = bandMetrics.map((m) => ({
+    name: m.indicatorName,        // this matches keys in byIndicator
+    label: m.label,               // short label shown on the right
+    indicatorName: m.indicatorName,
+    color: m.color
+  }));
+
+
+  // ---- Slider elements ----
+  const startSlider = d3.select("#area-start-year");
+  const endSlider = d3.select("#area-end-year");
+  const startLabel = d3.select("#area-start-year-label");
+  const endLabel = d3.select("#area-end-year-label");
+
   startSlider
-    .attr("min", minYear)
-    .attr("max", maxYear)
-    .attr("value", minYear);
+    .attr("min", sectionMinYear)
+    .attr("max", sectionMaxYear)
+    .attr("value", sectionMinYear);
 
   endSlider
-    .attr("min", minYear)
-    .attr("max", maxYear)
-    .attr("value", maxYear);
+    .attr("min", sectionMinYear)
+    .attr("max", sectionMaxYear)
+    .attr("value", sectionMaxYear);
 
-  startLabel.text(minYear);
-  endLabel.text(maxYear);
+  startLabel.text(sectionMinYear);
+  endLabel.text(sectionMaxYear);
+
+  // Apply initial cross-constraints so sliders can't cross
+  endSlider.attr("min", sectionMinYear); // end cannot be below start
+  startSlider.attr("max", sectionMaxYear); // start cannot be above end
+
+
+  // ---- Layout for small multiples ----
+  // (2) bump right margin so labels + summary aren’t clipped
+  const margin = { top: 20, right: 310, bottom: 30, left: 60 };
+  const width = 800;
+  const rowHeight = 70;
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = rowHeight * metricsConfig.length;
+
+  const svg = container
+    .append("svg")
+    .attr("width", width)
+    .attr("height", innerHeight + margin.top + margin.bottom);
+
+  const g = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  // Shared x-scale across all metrics
+  const x = d3
+    .scaleLinear()
+    .domain([sectionMinYear, sectionMaxYear])
+    .range([0, innerWidth]);
+
+  const xAxis = d3.axisBottom(x).ticks(8).tickFormat(d3.format("d"));
+  const xAxisGroup = g
+    .append("g")
+    .attr("transform", `translate(0, ${innerHeight})`)
+    .call(xAxis);
+
+  // One group per metric row
+  metricsConfig.forEach((m, i) => {
+    m.yOffset = i * rowHeight;
+
+    const row = g
+      .append("g")
+      .attr("class", "metric-row")
+      .attr("transform", `translate(0, ${m.yOffset})`);
+
+    const baselineY = rowHeight - 20;
+
+    row
+      .append("line")
+      .attr("class", "row-baseline")
+      .attr("x1", 0)
+      .attr("x2", innerWidth)
+      .attr("y1", baselineY)
+      .attr("y2", baselineY)
+      .attr("stroke", "#eee");
+
+    m.areaPath = row
+      .append("path")
+      .attr("class", "metric-area")
+      .attr("fill", m.color);
+
+    m.linePath = row
+      .append("path")
+      .attr("class", "metric-line")
+      .attr("stroke", m.color);
+
+    // (3) Metric label on the right, inside the expanded margin
+    m.labelText = row
+      .append("text")
+      .attr("class", "metric-label-text")
+      .attr("x", innerWidth + 4)
+      .attr("y", baselineY - 4)
+      .style("font-size", "13px")
+      .style("fill", m.color)
+      .text(m.label)
+      .on("mousemove", (event) => {
+      const desc =
+        DESCRIPTIONS[m.indicatorName] ||
+        "Description coming soon.";
+
+      metricTooltip
+        .style("opacity", 1)
+        .html(
+          `<strong>${m.label}</strong><br/>${desc}`
+        )
+        .style("left", event.pageX + 12 + "px")
+        .style("top", event.pageY - 28 + "px");
+    })
+    .on("mouseleave", () => {
+      metricTooltip.style("opacity", 0);
+    });
+
+    // (4) Summary text (% change) under the label
+    m.summaryText = row
+      .append("text")
+      .attr("class", "metric-summary-text")
+      .attr("x", innerWidth + 4)
+      .attr("y", baselineY + 17)
+      .style("font-size", "13px");
+  });
+
+  // --- Helper: compute series and percent change for a metric ---
+  function buildSeries(metricName, startYear, endYear) {
+    const rows = (byIndicator.get(metricName) || [])
+      .filter(
+        d =>
+          d.Year >= startYear &&
+          d.Year <= endYear &&
+          d.Value != null
+      )
+      .sort((a, b) => d3.ascending(a.Year, b.Year));
+
+    if (rows.length < 2) {
+      return { series: [], pctChange: null, startVal: null, endVal: null };
+    }
+
+    const series = rows.map(d => ({ year: d.Year, value: d.Value }));
+    const first = series[0];
+    const last = series[series.length - 1];
+    const pctChange = ((last.value - first.value) / first.value) * 100;
+
+    return {
+      series,
+      pctChange,
+      startVal: first.value,
+      endVal: last.value
+    };
+  }
 
   function getYearRange() {
-  const tf = timeframeSelect.node().value;
-
-  if (tf === "custom") {
     const start = +startSlider.node().value;
     const end = +endSlider.node().value;
     return [start, end];
-  } else {
-    const parts = tf.split("-").map(Number);
-    return [parts[0], parts[1]];
   }
-}
 
 
-  function updateCustomVisibility() {
-    if (timeframeSelect.node().value === "custom") {
-      customControls.style("display", "flex");
-    } else {
-      customControls.style("display", "none");
-    }
+  // Helper to abbreviate large numbers
+  function formatShortNumber(v) {
+    const abs = Math.abs(v);
+    if (abs >= 1e12) return (v / 1e12).toFixed(1) + "T";
+    if (abs >= 1e9)  return (v / 1e9).toFixed(1) + "B";
+    if (abs >= 1e6)  return (v / 1e6).toFixed(1) + "M";
+    if (abs >= 1e3)  return (v / 1e3).toFixed(1) + "k";
+    return d3.format(",.0f")(v); // plain with commas for smaller numbers
   }
+
 
   function update() {
-  const selectedMetric = metricSelect.node().value;
-  const [startYear, endYear] = getYearRange();
+    const [startYear, endYear] = getYearRange();
 
-  // NEW: update description blurb
-  updatePercentMetricDescription(selectedMetric);
+    startLabel.text(startYear);
+    endLabel.text(endYear);
 
-  const data = byIndicator.get(selectedMetric) || [];
+    // Update x domain + axis
+    x.domain([startYear, endYear]);
+    xAxisGroup.call(xAxis);
 
-  updatePercentChangeDisplay(
-    data,
-    selectedMetric,
-    startYear,
-    endYear
-  );
-  drawPercentChangeChart(
-    data,
-    selectedMetric,
-    startYear,
-    endYear
-  );
-}
+    metricsConfig.forEach(m => {
+      const { series, pctChange, startVal, endVal } = buildSeries(
+        m.name,
+        startYear,
+        endYear
+      );
 
+      const baselineY = rowHeight - 20;
 
-  // Dropdown listeners
-  metricSelect.on("change", update);
-  timeframeSelect.on("change", () => {
-    updateCustomVisibility();
+      if (!series.length) {
+        m.areaPath.attr("d", null);
+        m.linePath.attr("d", null);
+        m.summaryText.text("No data");
+        return;
+      }
+
+      const valuesExtent = d3.extent(series, d => d.value);
+      const y = d3
+        .scaleLinear()
+        .domain(valuesExtent)
+        .nice()
+        .range([baselineY, 0]);
+
+      const area = d3
+        .area()
+        .x(d => x(d.year))
+        .y0(baselineY)
+        .y1(d => y(d.value));
+
+      const line = d3
+        .line()
+        .x(d => x(d.year))
+        .y(d => y(d.value));
+
+      m.areaPath.datum(series).attr("d", area);
+      m.linePath.datum(series).attr("d", line);
+
+      // Summary text beside each metric
+      if (pctChange == null) {
+        m.summaryText.text("Not enough data");
+      } else {
+        const pctFmt = d3.format("+.1f");
+        const clsColor = pctChange >= 0 ? "#0a7a3b" : "#b02222";
+        m.summaryText
+          .style("fill", clsColor)
+          .text(
+            `${pctFmt(pctChange)}% (from ${formatShortNumber(
+              startVal
+            )} to ${formatShortNumber(endVal)})`
+          );
+
+      }
+    });
+  }
+
+  // Slider listeners with constraints so they can't cross
+  startSlider.on("input", () => {
+    let start = +startSlider.node().value;
+    let end = +endSlider.node().value;
+
+    if (start > end) {
+      start = end;
+      startSlider.node().value = start;
+    }
+
+    // end can't go earlier than start
+    endSlider.attr("min", start);
     update();
   });
 
-  // Slider listeners (only matter in custom mode)
-startSlider.on("input", () => {
-  let start = +startSlider.node().value;
-  let end = +endSlider.node().value;
+  endSlider.on("input", () => {
+    let start = +startSlider.node().value;
+    let end = +endSlider.node().value;
 
-  // If start passes end, move end up to match start
-  if (start > end) {
-    end = start;
-    endSlider.node().value = end;
-    endLabel.text(end);
-  }
+    if (end < start) {
+      end = start;
+      endSlider.node().value = end;
+    }
 
-  // Keep labels + constraints in sync
-  startLabel.text(start);
-  endSlider.attr("min", start);   // end can't be before start
+    // start can't go later than end
+    startSlider.attr("max", end);
+    update();
 
-  if (timeframeSelect.node().value === "custom") update();
-});
-
-endSlider.on("input", () => {
-  let start = +startSlider.node().value;
-  let end = +endSlider.node().value;
-
-  // If end goes before start, move start down to match end
-  if (end < start) {
-    start = end;
-    startSlider.node().value = start;
-    startLabel.text(start);
-  }
-
-  endLabel.text(end);
-  startSlider.attr("max", end);   // start can't be after end
-
-  if (timeframeSelect.node().value === "custom") update();
-});
+  });
 
 
-  // Initial state
-  updateCustomVisibility();
+  // Initial render
   update();
 }
+
+
 
 
 d3.csv(DATA_PATH, d3.autoType).then((rows) => {
@@ -768,8 +980,7 @@ d3.csv(DATA_PATH, d3.autoType).then((rows) => {
   const maxYear = d3.max(years);
 
 
-  // NEW: pass min/max year
-  initPercentChangeSection(byIndicator, minYear, maxYear);
+  initAreaComparisonSection(byIndicator, minYear, maxYear);    // new
 
   // --- Affordability series (GNI vs CPI, both indexed to 1970 = 100) ---
   const affordabilitySeries = buildAffordabilitySeries(byIndicator);
@@ -794,7 +1005,7 @@ function drawBigPictureChart(series, indicatorName) {
   const width = 800;
   const height = 400;
 
-  // ⬅increase left margin for long y-axis labels
+  // increase left margin for long y-axis labels
   const margin = { top: 40, right: 30, bottom: 40, left: 110 };
 
   const svg = container

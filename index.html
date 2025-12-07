@@ -58,68 +58,51 @@
   </div>
 </section>
 
-<section id="change-over-time" class="section">
+<section id="section-2">
   <h2>2. Economic Change Over Time</h2>
-  <p class="section-text">
+  <p>
     Compare how different economic metrics have grown (or shrunk) over a
-    selected time period. This makes it easy to see whether incomes are
-    keeping up with inflation, consumption, and other factors.
+    selected time period. Each band shows one metric as an area chart,
+    all aligned to the same time axis.
   </p>
 
-  <!-- Controls -->
-  <div class="comparison-controls">
-    <div>
-      <label for="pct-metric-select">Choose a metric:</label>
-      <select id="pct-metric-select"></select>
-    </div>
-
-    <div>
-      <label for="pct-timeframe-select">Select a timeframe:</label>
-      <select id="pct-timeframe-select">
-        <option value="1960-2020">1960–2020 (Full range)</option>
-        <option value="1960-1980">1960–1980</option>
-        <option value="1980-2000">1980–2000</option>
-        <option value="2000-2020">2000–2020</option>
-        <option value="custom">Custom range…</option>
-      </select>
-    </div>
-      <!-- NEW: dynamic description -->
-  <p id="pct-metric-description" class="metric-description"></p>
-
-    <!-- Shown only when "custom" is selected -->
-  <div id="custom-range-controls" class="custom-range-controls">
-    <div class="custom-range-group">
-      <label for="custom-start-year">Start year:
-        <span id="custom-start-year-label"></span>
+  <div class="area-controls">
+    <div class="area-slider">
+      <label for="area-start-year">
+        Start year:
+        <span id="area-start-year-label"></span>
       </label>
-      <input type="range" id="custom-start-year">
+      <input
+        id="area-start-year"
+        type="range"
+        min="1960"
+        max="2020"
+        value="1960"
+      />
     </div>
 
-    <div class="custom-range-group">
-      <label for="custom-end-year">End year:
-        <span id="custom-end-year-label"></span>
+    <div class="area-slider">
+      <label for="area-end-year">
+        End year:
+        <span id="area-end-year-label"></span>
       </label>
-      <input type="range" id="custom-end-year">
+      <input
+        id="area-end-year"
+        type="range"
+        min="1960"
+        max="2020"
+        value="2020"
+      />
     </div>
   </div>
 
-  <!-- % change result box -->
-  <div id="pct-change-result" class="pct-result-box"></div>
+  <!-- Summary of percent changes for each metric -->
+  <div id="area-change-summary"></div>
 
-  <!-- chart container -->
-  <div id="pct-change-chart" class="chart-card"></div>
-  </div>
-
-
-
-  <!-- % Change Display -->
-  <div id="pct-change-result" class="pct-change-box">
-    <!-- Filled dynamically -->
-  </div>
-
-  <!-- Chart area -->
-  <div id="pct-change-chart" class="pct-chart-container"></div>
+  <!-- Container for the stacked / small-multiple area charts -->
+  <div id="area-chart-container"></div>
 </section>
+
 
 
     <section id="writeup" class="writeup-section">

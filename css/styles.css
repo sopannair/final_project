@@ -77,7 +77,8 @@ svg {
   border-radius: 4px;
   font-size: 0.8rem;
   line-height: 1.2;
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 360px;
 }
 
 .line-gni-era,
@@ -242,4 +243,59 @@ h1, h2, h3, h4, h5 {
 
 strong {
   font-weight: 700;
+}
+
+.area-controls {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.area-slider label {
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+#area-change-summary {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.area-summary-row {
+  display: flex;
+  justify-content: space-between;
+  max-width: 900px;
+}
+
+.area-summary-row span.metric-label {
+  font-weight: 600;
+}
+
+.area-summary-row span.metric-change {
+  font-variant-numeric: tabular-nums;
+}
+
+.area-summary-row span.positive {
+  color: #0a7a3b;
+}
+
+.area-summary-row span.negative {
+  color: #b02222;
+}
+
+.metric-area {
+  fill-opacity: 0.25;
+}
+
+.metric-line {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.metric-label-text {
+  font-size: 11px;
+  dominant-baseline: middle;
 }
