@@ -103,13 +103,13 @@ const ERAS = [
 
   {
     id: "slow_recovery",
-    label: "2011–2020 · Slow Recovery to COVID",
+    label: "2011–2020 · Slow Recovery Followed by COVID",
     startYear: 2011,
     endYear: 2020,
     blurb:
       "The recovery from the Great Recession was long and uneven, with job growth returning slowly and wage gains lagging behind asset price appreciation. "
       + "Low interest rates helped stimulate investment but also contributed to rising housing costs in many regions, further pressuring household budgets. "
-      + "By 2020, the COVID-19 pandemic created another historic economic shock, disrupting labor markets and causing a sharp but temporary inflation spike.",
+      + "By 2020, the COVID-19 pandemic created another historic economic shock, disrupting labor markets and causing a sharp but temporary inflation spike (data not pictured)",
     events: [{ year: 2020, label: "COVID-19" }]
   }
 ];
@@ -727,7 +727,7 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
 
   // ---- Layout for small multiples ----
   // (2) bump right margin so labels + summary aren’t clipped
-  const margin = { top: 20, right: 310, bottom: 30, left: 60 };
+  const margin = { top: 20, right: 280, bottom: 30, left: 30 };
   const width = 800;
   const rowHeight = 70;
   const innerWidth = width - margin.left - margin.right;

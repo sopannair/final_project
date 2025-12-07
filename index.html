@@ -22,10 +22,10 @@
   <p>
     Affordability has become one of the most pressing concerns facing the American middle-class.
     Essential expenses such as housing, groceries, and childcare have risen considerably over time.
-    A common argument is that prices have remained stable "when adjusted for inflation".  
-    Yet to millions of families, life undeniably feels more expensive than ever.
+    A common counterpoint is that prices have actually remained stable if you adjust for inflation.  
+    Yet, to millions of families, life undeniably feels more expensive than ever.
     This project explores why economic data often fails to capture lived experience by examining how shifts in wages, prices, and macroeconomic conditions have 
-    contributed to today’s affordability challenges.
+    contributed to today's affordability challenges.
   </p>
 </section>
 
@@ -41,7 +41,7 @@
   <div id="income-vs-cost-card" class="chart-card">
     <!-- Era title + description -->
     <div class="era-header">
-      <h3 id="era-title">1970–1980: Inflation shock and stagflation</h3>
+      <h3 id="era-title">1970-1980: Inflation shock and stagflation</h3>
       <p id="era-description">
         High inflation and slow growth begin to push the cost of living up faster than incomes.
       </p>
@@ -56,14 +56,29 @@
       <button id="next-era-btn">Next era ▶</button>
     </div>
   </div>
+  <p>
+  Each series is expressed as an index with 1970 as the baseline, allowing changes over time to be compared on
+  the same scale. GNI is indexed by dividing each year's value by the 1970 value and multiplying by 100. CPI is
+  indexed by compounding annual inflation rates forward from 1970, which reflects how cumulative price changes
+  accumulate over time.</p>
+  <p>
+  The gap between CPI and GNI widens over time, showing that the cost of living has increased far more rapidly
+  than income. Even though incomes did grow, cumulative inflation outpaced those gains. 
+  This divergence illustrates why many Americans perceive life as more
+  expensive despite measurable economic growth.
+  </p>
 </section>
 
 <section id="section-2">
-  <h2>2. Economic Change Over Time</h2>
+  <h2>2. Macroeconomic Trends Over Time</h2>
+  <p>Wages and prices alone don't capture the full economic picture. To understand today's
+  affordability challenges, it's important to examine how broader economic indicators
+  have evolved over time—including economic output, household spending, and national investment.
+  </p>
   <p>
-    Compare how different economic metrics have grown (or shrunk) over a
-    selected time period. Each band shows one metric as an area chart,
-    all aligned to the same time axis.
+    Use the sliders below to explore how much each metric has grown (or declined) over a select time period.
+    Each band represents one economic metric as an area chart.
+    Hover over the name of a metric to see what it measures.
   </p>
 
   <div class="area-controls">
@@ -101,11 +116,22 @@
 
   <!-- Container for the stacked / small-multiple area charts -->
   <div id="area-chart-container"></div>
+  <p>
+  Measures such as GDP per capita, income per capita, and national investment all rose considerably, indicating broad 
+  economic expansion over time. 
+  However, the substantial growth of these measures did not translate into improved household financial well-being.
+  </p>
+  <p>
+  The steep rise in household consumption and national expenditure suggests that Americans are spending more than ever, while wage-growth 
+  has not consistently kept pace with these increases. Together, these trends provide critical context for today's affordability 
+  concerns: the economy has expanded on paper, yet everyday financial pressures—such as housing, healthcare, and essential goods—
+  have risen faster than what many households actually earn.
+  </p>
 </section>
 
 
 
-    <section id="writeup" class="writeup-section">
+    <!-- <section id="writeup" class="writeup-section">
         <h2>Prototype Writeup:</h2>
         <div class="writeup-content">
             <p>
@@ -119,7 +145,14 @@
                 Here are some of the ways I am aiming to add engagement and interactivity:
                 
             </p>
-        </div>
+        </div> -->
+    <!-- </section> -->
+    <section id="takeaway">
+    <p>
+    In summary, measurable economic gains have not translated into greater economic security for the average American. 
+    These visualizations reveal the growing disconnect between macroeconomic
+    growth and everyday economic reality.
+    </p>
     </section>
     </main>
 
