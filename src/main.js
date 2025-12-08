@@ -80,10 +80,15 @@ const ERAS = [
     startYear: 1991,
     endYear: 2000,
     blurb:
-      "The 1990s experienced strong economic growth powered by globalization, declining inflation, and rapid technological innovation. "
-      + "The explosive rise of the internet and computing boosted productivity and helped fuel one of the longest expansions in U.S. history. "
-      + "While incomes rose, asset prices—especially tech stocks—grew even faster, setting the stage for the dot-com bubble at the decade’s end.",
-    events: [{ year: 2000, label: "Dot-com peak" }]
+      "The 1990s began with an economic downturn caused by bank failures and the Gulf War Oil Shock. "
+      + "Unemployment rose while energy costs skyrocketed, widening the gap between wages and prices. "
+      + "However, the nation soon rebounded with strong economic growth powered by rapid technological innovation. "
+      + "The rise of the internet and computing boosted productivity and helped incomes rise. "
+      + "Asset such as tech stocks grew even faster, culminating in the dot-com bubble.",
+    events: [
+      { year: 1990, label: "Early 90s Recession" },
+      { year: 2000, label: "Dot-com peak" }
+    ]
   },
 
   {
@@ -875,7 +880,7 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
           .html(
             `<strong>${m.label}</strong><br/>
             Year: ${d.year}<br/>
-            Value: ${formatShortNumber(d.value)}`
+            Value: $${formatShortNumber(d.value)}`
           )
           .style("left", event.pageX + 12 + "px")
           .style("top", event.pageY - 28 + "px");
@@ -1001,9 +1006,9 @@ function initAreaComparisonSection(byIndicator, minYear, maxYear) {
         m.summaryText
           .style("fill", clsColor)
           .text(
-            `${pctFmt(pctChange)}% (from ${formatShortNumber(
+            `${pctFmt(pctChange)}% (from $${formatShortNumber(
               startVal
-            )} to ${formatShortNumber(endVal)})`
+            )} to $${formatShortNumber(endVal)})`
           );
 
       }
